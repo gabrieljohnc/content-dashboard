@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -19,9 +19,15 @@ import {
 } from '@/hooks/use-reportei'
 import { PLATFORM_COLORS } from '@/lib/constants'
 
-export function ReporteiConfig() {
+export function ReporteiConfig({
+  dataSource,
+  onDataSourceChange,
+}: {
+  dataSource?: 'mock' | 'reportei'
+  onDataSourceChange?: (source: 'mock' | 'reportei') => void
+}) {
   const [selectedProjectId, setSelectedProjectId] = useSelectedProject()
-  const [isExpanded, setIsExpanded] = useState(!selectedProjectId)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const { projects, loading: loadingProjects, error: projectsError } = useProjects()
   const { integrations, loading: loadingIntegrations } = useIntegrations(selectedProjectId)
@@ -60,6 +66,35 @@ export function ReporteiConfig() {
                 {' · '}
                 {platformIntegrations.length} plataformas conectadas
               </CardDescription>
+            )}
+            {isConfigured && !isExpanded && dataSource && onDataSourceChange && (
+              <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                <span className="text-[11px] text-muted-foreground">Fonte:</span>
+                <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5">
+                  <button
+                    onClick={() => onDataSourceChange('mock')}
+                    className={[
+                      'rounded-md px-2.5 py-0.5 text-[11px] font-medium transition-colors',
+                      dataSource === 'mock'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
+                    ].join(' ')}
+                  >
+                    Demo
+                  </button>
+                  <button
+                    onClick={() => onDataSourceChange('reportei')}
+                    className={[
+                      'rounded-md px-2.5 py-0.5 text-[11px] font-medium transition-colors',
+                      dataSource === 'reportei'
+                        ? 'bg-emerald-500/20 text-emerald-400 shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
+                    ].join(' ')}
+                  >
+                    Reportei (Real)
+                  </button>
+                </div>
+              </div>
             )}
           </div>
           <span className="text-xs text-muted-foreground">

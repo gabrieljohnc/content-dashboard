@@ -22,7 +22,7 @@ export async function GET() {
     const parser = new Parser({
       timeout: 10000,
       headers: {
-        'User-Agent': 'ContentHub/1.0',
+        'User-Agent': 'CentralDoConteudo/1.0',
       },
     })
 

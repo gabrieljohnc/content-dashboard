@@ -267,7 +267,7 @@ function NewPostDialog({
           </div>
 
           {/* Row: Tipo + Plataforma */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">
                 Tipo de Post
@@ -313,7 +313,7 @@ function NewPostDialog({
           </div>
 
           {/* Row: Status + Data */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">
                 Status

@@ -185,7 +185,7 @@ function DateRangeSelector({
   return (
     <Card>
       <CardContent className="py-4">
-        <div className="flex flex-wrap items-end gap-6">
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-6">
           {/* Período de Análise */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
@@ -198,7 +198,7 @@ function DateRangeSelector({
                 onChange={(e) =>
                   onChange({ ...ranges, analise: { ...ranges.analise, start: e.target.value } })
                 }
-                className="rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-0 flex-1 md:flex-none"
               />
               <span className="text-xs text-muted-foreground">até</span>
               <input
@@ -207,10 +207,10 @@ function DateRangeSelector({
                 onChange={(e) =>
                   onChange({ ...ranges, analise: { ...ranges.analise, end: e.target.value } })
                 }
-                className="rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-0 flex-1 md:flex-none"
               />
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                ({analysisDays} dias)
+                ({analysisDays}d)
               </span>
             </div>
           </div>
@@ -227,7 +227,7 @@ function DateRangeSelector({
                 onChange={(e) =>
                   onChange({ ...ranges, comparacao: { ...ranges.comparacao, start: e.target.value } })
                 }
-                className="rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 flex-1 md:flex-none"
               />
               <span className="text-xs text-muted-foreground">até</span>
               <input
@@ -236,10 +236,10 @@ function DateRangeSelector({
                 onChange={(e) =>
                   onChange({ ...ranges, comparacao: { ...ranges.comparacao, end: e.target.value } })
                 }
-                className="rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-0 flex-1 md:flex-none"
               />
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                ({compDays} dias)
+                ({compDays}d)
               </span>
             </div>
           </div>
@@ -259,7 +259,7 @@ function DateRangeSelector({
                   key={opt.days}
                   onClick={() => setPreset(opt.days)}
                   className={[
-                    'rounded-md px-3 py-1 text-sm font-medium transition-colors',
+                    'rounded-md px-3 py-2 text-sm font-medium transition-colors',
                     analysisDays === opt.days
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground',
@@ -865,7 +865,7 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           label="Alcance"
           sublabel="Distribuição"
@@ -1028,7 +1028,7 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           label="Impressões"
           sublabel="Distribuição no feed"
@@ -1185,7 +1185,7 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           label="Watch Time"
           sublabel="Métrica mais importante"
@@ -1844,13 +1844,18 @@ export default function AnalyticsPage() {
   const [ranges, setRanges] = useState<DateRanges>(() => buildRanges(new Date()))
   const [activeTab, setActiveTab] = useState<ActiveTab>('instagram')
   const [isMounted, setIsMounted] = useState(false)
+  const { projectId, isConfigured } = useReporteiConfig()
+
   const [dataSource, setDataSource] = useState<'mock' | 'reportei'>('mock')
+
+  // Switch to reportei once config loads from localStorage
+  useEffect(() => {
+    if (isConfigured) setDataSource('reportei')
+  }, [isConfigured])
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
-
-  const { projectId, isConfigured } = useReporteiConfig()
 
   const isReportei = isConfigured && dataSource === 'reportei'
 
@@ -1894,62 +1899,21 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
-      {/* Reportei Config */}
-      <ReporteiConfig />
-
-      {/* Data Source Toggle */}
-      {isConfigured && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Fonte de dados:</span>
-          <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-            <button
-              onClick={() => setDataSource('mock')}
-              className={[
-                'rounded-md px-3 py-1 text-xs font-medium transition-colors',
-                dataSource === 'mock'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              ].join(' ')}
-            >
-              Dados Demo
-            </button>
-            <button
-              onClick={() => setDataSource('reportei')}
-              className={[
-                'rounded-md px-3 py-1 text-xs font-medium transition-colors',
-                dataSource === 'reportei'
-                  ? 'bg-emerald-500/20 text-emerald-400 shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              ].join(' ')}
-            >
-              Reportei (Real)
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Reportei Config + Data Source Toggle */}
+      <ReporteiConfig dataSource={dataSource} onDataSourceChange={setDataSource} />
 
       {/* Date Range Selector */}
       <DateRangeSelector ranges={ranges} onChange={setRanges} />
 
-      {/* Reportei Live Data */}
-      {dataSource === 'reportei' && isConfigured && (
-        <ReporteiLivePanel
-          platformData={reporteiData?.data || []}
-          loading={reporteiLoading}
-          error={reporteiError}
-          onRefresh={refetchReportei}
-        />
-      )}
-
       {/* Platform Tabs */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 rounded-lg bg-muted p-1 w-fit">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1 rounded-lg bg-muted p-1 w-full sm:w-fit overflow-x-auto">
           {TAB_OPTIONS.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
               className={[
-                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1.5',
+                'rounded-md px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap flex-1 sm:flex-none justify-center',
                 activeTab === tab.value
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',

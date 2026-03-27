@@ -160,7 +160,7 @@ function DayCell({
   return (
     <div
       className={[
-        'flex min-h-[110px] flex-col gap-1 border-b border-r border-zinc-800 p-2',
+        'flex min-h-[60px] md:min-h-[110px] flex-col gap-1 border-b border-r border-zinc-800 p-1 md:p-2',
         isCurrentMonth ? 'bg-zinc-900' : 'bg-zinc-950',
       ].join(' ')}
     >
@@ -328,7 +328,7 @@ export default function CalendarioPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700"
             aria-label="Mês anterior"
           >
             <ChevronLeftIcon size={16} />
@@ -338,7 +338,7 @@ export default function CalendarioPage() {
           </span>
           <button
             onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700"
             aria-label="Próximo mês"
           >
             <ChevronRightIcon size={16} />
