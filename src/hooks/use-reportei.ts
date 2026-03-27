@@ -120,7 +120,7 @@ export function usePlatformData(
     setError(null)
     try {
       const res = await apiFetch<PlatformDataResult>(
-        '/api/reportei/metrics/data',
+        '/api/metrics/data',
         {
           method: 'POST',
           body: JSON.stringify({
