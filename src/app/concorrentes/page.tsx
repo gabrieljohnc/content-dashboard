@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { PlusIcon, ArrowUpIcon, ArrowDownIcon, ArrowUpDownIcon } from 'lucide-react'
+import { PlusIcon, ArrowUpIcon, ArrowDownIcon, ArrowUpDownIcon, Trash2Icon, StickyNoteIcon } from 'lucide-react'
 import {
   BarChart,
   Bar,
@@ -33,12 +33,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { mockCompetitors } from '@/lib/mock-data'
 import { PLATFORM_COLORS, PLATFORM_LABELS } from '@/lib/constants'
 import { useLocalStorage } from '@/hooks/use-local-storage'
-import type { Competitor, Platform } from '@/lib/types'
+import type { AnalysisNote, Competitor, Platform } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -743,6 +745,175 @@ function AddCompetitorDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Analysis Notes Section
+// ---------------------------------------------------------------------------
+
+function AnalysisNotesSection({
+  activePlatforms,
+}: {
+  activePlatforms: Set<Platform>
+}) {
+  const [notes, setNotes] = useLocalStorage<AnalysisNote[]>(
+    'content-dashboard:analysis-notes',
+    []
+  )
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('instagram')
+  const [draft, setDraft] = useState('')
+
+  function handleAdd() {
+    if (!draft.trim()) return
+    const newNote: AnalysisNote = {
+      id: crypto.randomUUID(),
+      plataforma: selectedPlatform,
+      texto: draft.trim(),
+      criadoEm: new Date().toISOString(),
+    }
+    setNotes((prev) => [newNote, ...prev])
+    setDraft('')
+  }
+
+  function handleDelete(id: string) {
+    setNotes((prev) => prev.filter((n) => n.id !== id))
+  }
+
+  const visiblePlatforms = PLATFORMS.filter((p) => activePlatforms.has(p))
+
+  // Ensure selectedPlatform is visible
+  useEffect(() => {
+    if (!activePlatforms.has(selectedPlatform) && visiblePlatforms.length > 0) {
+      setSelectedPlatform(visiblePlatforms[0])
+    }
+  }, [activePlatforms, selectedPlatform, visiblePlatforms])
+
+  const filteredNotes = notes.filter((n) => n.plataforma === selectedPlatform)
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <StickyNoteIcon className="size-4 text-muted-foreground" />
+          <CardTitle>Notas de Análise</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Platform selector */}
+        <div className="mb-4 flex items-center gap-2">
+          {visiblePlatforms.map((p) => {
+            const color = PLATFORM_COLORS[p]
+            const active = p === selectedPlatform
+            return (
+              <button
+                key={p}
+                onClick={() => setSelectedPlatform(p)}
+                className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+                style={
+                  active
+                    ? {
+                        borderColor: color,
+                        backgroundColor: `${color}22`,
+                        color,
+                      }
+                    : {
+                        borderColor: '#3f3f46',
+                        backgroundColor: 'transparent',
+                        color: 'var(--muted-foreground)',
+                      }
+                }
+              >
+                <span
+                  className="size-2 rounded-full"
+                  style={{ backgroundColor: active ? color : 'currentColor' }}
+                />
+                {PLATFORM_LABELS[p]}
+                {notes.filter((n) => n.plataforma === p).length > 0 && (
+                  <span
+                    className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                    style={{ backgroundColor: `${color}33`, color }}
+                  >
+                    {notes.filter((n) => n.plataforma === p).length}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Add note */}
+        <div className="mb-4 flex flex-col gap-2">
+          <Textarea
+            placeholder={`Adicionar nota sobre ${PLATFORM_LABELS[selectedPlatform]}...`}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault()
+                handleAdd()
+              }
+            }}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              Ctrl+Enter para salvar
+            </span>
+            <Button
+              onClick={handleAdd}
+              disabled={!draft.trim()}
+              className="gap-1.5"
+            >
+              <PlusIcon className="size-3.5" />
+              Adicionar Nota
+            </Button>
+          </div>
+        </div>
+
+        {/* Notes list */}
+        {filteredNotes.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            Nenhuma nota para {PLATFORM_LABELS[selectedPlatform]} ainda.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {filteredNotes.map((note) => {
+              const color = PLATFORM_COLORS[note.plataforma]
+              return (
+                <div
+                  key={note.id}
+                  className="group relative rounded-lg border p-3"
+                  style={{ borderColor: `${color}33` }}
+                >
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
+                    {note.texto}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(note.criadoEm).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+                      title="Excluir nota"
+                    >
+                      <Trash2Icon className="size-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main Page
 // ---------------------------------------------------------------------------
 
@@ -785,50 +956,63 @@ export default function ConcorrentesPage() {
         onChange={setActivePlatforms}
       />
 
-      {/* Competitor Cards */}
-      {competitors.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nenhum concorrente cadastrado. Clique em &quot;Adicionar Concorrente&quot; para começar.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-          {competitors.map((c) => (
-            <CompetitorCard
-              key={c.id}
-              competitor={c}
+      {/* Tabs */}
+      <Tabs defaultValue="overview">
+        <TabsList variant="line">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="comparison">Comparativos</TabsTrigger>
+          <TabsTrigger value="posts">Posts Recentes</TabsTrigger>
+        </TabsList>
+
+        {/* Visão Geral */}
+        <TabsContent value="overview">
+          <div className="flex flex-col gap-8 pt-4">
+            {competitors.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum concorrente cadastrado. Clique em &quot;Adicionar Concorrente&quot; para começar.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+                {competitors.map((c) => (
+                  <CompetitorCard
+                    key={c.id}
+                    competitor={c}
+                    activePlatforms={activePlatforms}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Comparativos */}
+        <TabsContent value="comparison">
+          <div className="flex flex-col gap-8 pt-4">
+            <ComparisonTable
+              competitors={competitors}
               activePlatforms={activePlatforms}
             />
-          ))}
-        </div>
-      )}
 
-      {/* Comparison Table */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Comparativo Geral</h2>
-        <ComparisonTable
-          competitors={competitors}
-          activePlatforms={activePlatforms}
-        />
-      </div>
+            <GrowthChart
+              competitors={competitors}
+              activePlatforms={activePlatforms}
+              isMounted={isMounted}
+            />
 
-      {/* Growth Trend Chart */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Tendência de Crescimento</h2>
-        <GrowthChart
-          competitors={competitors}
-          activePlatforms={activePlatforms}
-          isMounted={isMounted}
-        />
-      </div>
+            <AnalysisNotesSection activePlatforms={activePlatforms} />
+          </div>
+        </TabsContent>
 
-      {/* Recent Posts */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Posts Recentes dos Concorrentes</h2>
-        <RecentPostsSection
-          competitors={competitors}
-          activePlatforms={activePlatforms}
-        />
-      </div>
+        {/* Posts Recentes */}
+        <TabsContent value="posts">
+          <div className="pt-4">
+            <RecentPostsSection
+              competitors={competitors}
+              activePlatforms={activePlatforms}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

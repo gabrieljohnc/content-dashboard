@@ -8,6 +8,8 @@ import {
   Trash2Icon,
   FileTextIcon,
   InfoIcon,
+  DownloadIcon,
+  Loader2Icon,
 } from 'lucide-react'
 import {
   BarChart,
@@ -1394,6 +1396,7 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
           </Table>
         </CardContent>
       </Card>
+      <PlatformNotes platform="instagram" ranges={ranges} />
 
       {/* LinkedIn */}
       <Card>
@@ -1440,6 +1443,7 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
           </Table>
         </CardContent>
       </Card>
+      <PlatformNotes platform="linkedin" ranges={ranges} />
 
       {/* YouTube */}
       <Card>
@@ -1486,13 +1490,10 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
           </Table>
         </CardContent>
       </Card>
+      <PlatformNotes platform="youtube" ranges={ranges} />
     </div>
   )
 }
-
-// ===========================================================================
-// MAIN PAGE
-// ===========================================================================
 
 // ===========================================================================
 // REPORTEI LIVE DATA PANEL
@@ -1618,12 +1619,12 @@ function ReporteiLivePanel({
 }
 
 // ===========================================================================
-// ANALYTICS NOTES
+// PLATFORM NOTES (inline per platform in Comparativo)
 // ===========================================================================
 
-interface AnalyticsNote {
+interface PlatformNote {
   id: string
-  titulo: string
+  plataforma: Platform
   criadoEm: string
   periodoAnalise: DateRange
   periodoComparacao: DateRange
@@ -1641,19 +1642,35 @@ function formatRangeBR(range: DateRange): string {
   return `${fmt(range.start)} – ${fmt(range.end)}`
 }
 
-function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
-  const [notes, setNotes] = useLocalStorage<AnalyticsNote[]>(
-    'content-dashboard:analytics-notes',
+function PlatformNotes({ platform, ranges }: { platform: Platform; ranges: DateRanges }) {
+  const [notes, setNotes] = useLocalStorage<PlatformNote[]>(
+    `content-dashboard:notes-${platform}`,
     []
   )
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
 
+  const color = PLATFORM_COLORS[platform]
+
+  // Clean up any duplicates on mount
+  useEffect(() => {
+    const seen = new Set<string>()
+    const deduped = notes.filter((n) => {
+      if (seen.has(n.id)) return false
+      seen.add(n.id)
+      return true
+    })
+    if (deduped.length !== notes.length) {
+      setNotes(deduped)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const createNote = useCallback(() => {
     const id = crypto.randomUUID()
-    const newNote: AnalyticsNote = {
+    const newNote: PlatformNote = {
       id,
-      titulo: `Análise ${formatRangeBR(ranges.analise)} vs ${formatRangeBR(ranges.comparacao)}`,
+      plataforma: platform,
       criadoEm: new Date().toISOString(),
       periodoAnalise: { ...ranges.analise },
       periodoComparacao: { ...ranges.comparacao },
@@ -1662,13 +1679,17 @@ function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
       insight: '',
       proximaAcao: '',
     }
-    setNotes((prev) => [newNote, ...prev])
+    // Use deduplication to prevent StrictMode double-invoke
+    setNotes((prev) => {
+      if (prev.some((n) => n.id === id)) return prev
+      return [...prev, newNote]
+    })
     setExpandedId(id)
     setEditingId(id)
-  }, [ranges, setNotes])
+  }, [platform, ranges, setNotes])
 
   const updateNote = useCallback(
-    (id: string, field: keyof Pick<AnalyticsNote, 'certo' | 'errado' | 'insight' | 'proximaAcao'>, value: string) => {
+    (id: string, field: keyof Pick<PlatformNote, 'certo' | 'errado' | 'insight' | 'proximaAcao'>, value: string) => {
       setNotes((prev) =>
         prev.map((n) => (n.id === id ? { ...n, [field]: value } : n))
       )
@@ -1691,31 +1712,32 @@ function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Header */}
+    <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileTextIcon className="size-4 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Notas de Análise</h2>
-          <span className="text-xs text-muted-foreground">({notes.length})</span>
+          <FileTextIcon className="size-3.5" style={{ color }} />
+          <span className="text-sm font-medium" style={{ color }}>
+            Notas de Análise
+          </span>
+          {notes.length > 0 && (
+            <span className="text-xs text-muted-foreground">({notes.length})</span>
+          )}
         </div>
-        <Button onClick={createNote} className="gap-1.5" size="sm">
-          <PlusIcon className="size-3.5" />
+        <Button onClick={createNote} variant="outline" size="sm" className="gap-1.5 text-xs" style={{ borderColor: `${color}44`, color }}>
+          <PlusIcon className="size-3" />
           Nova Nota
         </Button>
       </div>
 
       {notes.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              Nenhuma nota criada. Clique em &quot;Nova Nota&quot; para registrar sua análise do período.
-            </p>
-          </CardContent>
-        </Card>
+        <div
+          className="rounded-lg border border-dashed px-4 py-3 text-center text-xs text-muted-foreground"
+          style={{ borderColor: `${color}33` }}
+        >
+          Nenhuma nota para {PLATFORM_LABELS[platform]}. Clique em &quot;Nova Nota&quot; para registrar sua análise.
+        </div>
       )}
 
-      {/* Notes List */}
       {notes.map((note) => {
         const isExpanded = expandedId === note.id
         const isEditing = editingId === note.id
@@ -1729,22 +1751,23 @@ function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
         const hasContent = note.certo || note.errado || note.insight || note.proximaAcao
 
         return (
-          <Card key={note.id} className={isExpanded ? 'ring-1 ring-zinc-600' : ''}>
-            {/* Note Header — always visible */}
+          <Card key={note.id} className={isExpanded ? 'ring-1' : ''} style={isExpanded ? { borderColor: `${color}55` } : {}}>
             <button
               onClick={() => toggleExpand(note.id)}
-              className="flex w-full items-center justify-between px-6 py-4 text-left"
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
             >
               <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-semibold">{note.titulo}</span>
+                <span className="text-sm font-medium">
+                  {formatRangeBR(note.periodoAnalise)} vs {formatRangeBR(note.periodoComparacao)}
+                </span>
                 <span className="text-[10px] text-muted-foreground">
-                  Criada em {createdDate}
+                  {createdDate}
                   {!hasContent && ' — vazia'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {hasContent && (
-                  <span className="size-1.5 rounded-full bg-emerald-400" />
+                  <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} />
                 )}
                 {isExpanded ? (
                   <ChevronUpIcon className="size-4 text-muted-foreground" />
@@ -1754,22 +1777,8 @@ function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
               </div>
             </button>
 
-            {/* Note Body — expanded */}
             {isExpanded && (
               <CardContent className="pt-0">
-                {/* Period info */}
-                <div className="mb-4 flex flex-wrap gap-4 text-[10px] text-muted-foreground">
-                  <span>
-                    <span className="font-semibold text-emerald-400 uppercase tracking-wider">Análise:</span>{' '}
-                    {formatRangeBR(note.periodoAnalise)}
-                  </span>
-                  <span>
-                    <span className="font-semibold text-blue-400 uppercase tracking-wider">Comparação:</span>{' '}
-                    {formatRangeBR(note.periodoComparacao)}
-                  </span>
-                </div>
-
-                {/* Table */}
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1779,13 +1788,13 @@ function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
                   </TableHeader>
                   <TableBody>
                     {([
-                      { key: 'certo' as const, label: 'O que deu certo', color: 'text-emerald-400' },
-                      { key: 'errado' as const, label: 'O que deu errado', color: 'text-red-400' },
-                      { key: 'insight' as const, label: 'Insight', color: 'text-amber-400' },
-                      { key: 'proximaAcao' as const, label: 'Próxima ação', color: 'text-blue-400' },
-                    ]).map(({ key, label, color }) => (
+                      { key: 'certo' as const, label: 'O que deu certo', labelColor: 'text-emerald-400' },
+                      { key: 'errado' as const, label: 'O que deu errado', labelColor: 'text-red-400' },
+                      { key: 'insight' as const, label: 'Insight', labelColor: 'text-amber-400' },
+                      { key: 'proximaAcao' as const, label: 'Próxima ação', labelColor: 'text-blue-400' },
+                    ]).map(({ key, label, labelColor }) => (
                       <TableRow key={key}>
-                        <TableCell className={`font-medium ${color} align-top`}>
+                        <TableCell className={`font-medium ${labelColor} align-top`}>
                           {label}
                         </TableCell>
                         <TableCell>
@@ -1793,7 +1802,7 @@ function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
                             <textarea
                               value={note[key]}
                               onChange={(e) => updateNote(note.id, key, e.target.value)}
-                              placeholder={`Escreva aqui...`}
+                              placeholder="Escreva aqui..."
                               rows={2}
                               className="w-full resize-y rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-foreground placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                             />
@@ -1808,7 +1817,6 @@ function AnalyticsNotes({ ranges }: { ranges: DateRanges }) {
                   </TableBody>
                 </Table>
 
-                {/* Actions */}
                 <div className="mt-4 flex items-center justify-between">
                   <Button
                     variant="outline"
@@ -1844,6 +1852,7 @@ export default function AnalyticsPage() {
   const [ranges, setRanges] = useState<DateRanges>(() => buildRanges(new Date()))
   const [activeTab, setActiveTab] = useState<ActiveTab>('instagram')
   const [isMounted, setIsMounted] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const { projectId, isConfigured } = useReporteiConfig()
 
   const [dataSource, setDataSource] = useState<'mock' | 'reportei'>('mock')
@@ -1889,14 +1898,207 @@ export default function AnalyticsPage() {
     }
   }, [isReportei, reporteiData, reporteiPlatforms, igPlatformData, liPlatformData, ytPlatformData])
 
+  // =========================================================================
+  // PDF METRICS (calculated centrally for export)
+  // =========================================================================
+
+  const igMockFiltered = useMemo(() => filterByDateRanges(mockInstagramMetrics, ranges), [ranges])
+  const liMockFiltered = useMemo(() => filterByDateRanges(mockLinkedInMetrics, ranges), [ranges])
+  const ytMockFiltered = useMemo(() => filterByDateRanges(mockYouTubeMetrics, ranges), [ranges])
+
+  const pdfInstagram = useMemo(() => {
+    if (isReportei && igPlatformData) {
+      const m = igPlatformData.metrics, p = igPlatformData.comparison.previous_period || {}
+      return {
+        alcance: m.reach || 0, alcancePrev: p.reach || 0,
+        salvamentos: m.saves || 0, salvamentosPrev: p.saves || 0,
+        compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
+        retencaoReels: m.reels_engagement_rate || m.interaction_rate || 0, retencaoReelsPrev: p.reels_engagement_rate || p.interaction_rate || 0,
+        cliquesLink: m.clicks || 0, cliquesLinkPrev: p.clicks || 0,
+        curtidas: m.likes || 0, curtidasPrev: p.likes || 0,
+        seguidores: m.followers || 0,
+      }
+    }
+    const c = igMockFiltered.current, pv = igMockFiltered.previous
+    const sum = (arr: typeof c, k: keyof typeof c[0]) => arr.reduce((s, m) => s + (m[k] as number), 0)
+    const avg = (arr: typeof c, k: keyof typeof c[0]) => arr.length > 0 ? sum(arr, k) / arr.length : 0
+    return {
+      alcance: sum(c, 'alcance'), alcancePrev: sum(pv, 'alcance'),
+      salvamentos: sum(c, 'salvamentos'), salvamentosPrev: sum(pv, 'salvamentos'),
+      compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
+      retencaoReels: avg(c, 'retencaoReels'), retencaoReelsPrev: avg(pv, 'retencaoReels'),
+      cliquesLink: sum(c, 'cliquesLink'), cliquesLinkPrev: sum(pv, 'cliquesLink'),
+      curtidas: sum(c, 'curtidas'), curtidasPrev: sum(pv, 'curtidas'),
+      seguidores: c.length > 0 ? c[c.length - 1].seguidores : 0,
+    }
+  }, [igMockFiltered, isReportei, igPlatformData])
+
+  const pdfLinkedin = useMemo(() => {
+    if (isReportei && liPlatformData) {
+      const m = liPlatformData.metrics, p = liPlatformData.comparison.previous_period || {}
+      return {
+        impressoes: m.impressions || 0, impressoesPrev: p.impressions || 0,
+        comentarios: m.comments || 0, comentariosPrev: p.comments || 0,
+        reacoes: m.reactions || 0, reacoesPrev: p.reactions || 0,
+        ctr: m.ctr || 0, ctrPrev: p.ctr || 0,
+        seguidoresQualificados: m.new_followers || 0, seguidoresQualificadosPrev: p.new_followers || 0,
+        compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
+        seguidores: m.followers || 0,
+      }
+    }
+    const c = liMockFiltered.current, pv = liMockFiltered.previous
+    const sum = (arr: typeof c, k: keyof typeof c[0]) => arr.reduce((s, m) => s + (m[k] as number), 0)
+    const avg = (arr: typeof c, k: keyof typeof c[0]) => arr.length > 0 ? sum(arr, k) / arr.length : 0
+    return {
+      impressoes: sum(c, 'impressoes'), impressoesPrev: sum(pv, 'impressoes'),
+      comentarios: sum(c, 'comentarios'), comentariosPrev: sum(pv, 'comentarios'),
+      reacoes: sum(c, 'reacoes'), reacoesPrev: sum(pv, 'reacoes'),
+      ctr: avg(c, 'ctr'), ctrPrev: avg(pv, 'ctr'),
+      seguidoresQualificados: sum(c, 'seguidoresQualificados'), seguidoresQualificadosPrev: sum(pv, 'seguidoresQualificados'),
+      compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
+      seguidores: c.length > 0 ? c[c.length - 1].seguidores : 0,
+    }
+  }, [liMockFiltered, isReportei, liPlatformData])
+
+  const pdfYoutube = useMemo(() => {
+    if (isReportei && ytPlatformData) {
+      const m = ytPlatformData.metrics, p = ytPlatformData.comparison.previous_period || {}
+      return {
+        ctrThumbnail: m.ctr || 0, ctrThumbnailPrev: p.ctr || 0,
+        retencaoMedia: m.retention || 0, retencaoMediaPrev: p.retention || 0,
+        watchTime: m.watch_time || 0, watchTimePrev: p.watch_time || 0,
+        inscricoesPorVideo: m.new_followers || 0, inscricoesPorVideoPrev: p.new_followers || 0,
+        visualizacoes: m.impressions || 0, visualizacoesPrev: p.impressions || 0,
+        inscritos: m.followers || 0,
+      }
+    }
+    const c = ytMockFiltered.current, pv = ytMockFiltered.previous
+    const sum = (arr: typeof c, k: keyof typeof c[0]) => arr.reduce((s, m) => s + (m[k] as number), 0)
+    const avg = (arr: typeof c, k: keyof typeof c[0]) => arr.length > 0 ? sum(arr, k) / arr.length : 0
+    return {
+      ctrThumbnail: avg(c, 'ctrThumbnail'), ctrThumbnailPrev: avg(pv, 'ctrThumbnail'),
+      retencaoMedia: avg(c, 'retencaoMedia'), retencaoMediaPrev: avg(pv, 'retencaoMedia'),
+      watchTime: sum(c, 'watchTime'), watchTimePrev: sum(pv, 'watchTime'),
+      inscricoesPorVideo: avg(c, 'inscricoesPorVideo'), inscricoesPorVideoPrev: avg(pv, 'inscricoesPorVideo'),
+      visualizacoes: sum(c, 'visualizacoes'), visualizacoesPrev: sum(pv, 'visualizacoes'),
+      inscritos: c.length > 0 ? c[c.length - 1].inscritos : 0,
+    }
+  }, [ytMockFiltered, isReportei, ytPlatformData])
+
+  const pdfComparativo = useMemo(() => ({
+    ig: {
+      alcance: pdfInstagram.alcance, alcancePrev: pdfInstagram.alcancePrev,
+      salvamentos: pdfInstagram.salvamentos, salvamentosPrev: pdfInstagram.salvamentosPrev,
+      compartilhamentos: pdfInstagram.compartilhamentos, compartilhamentosPrev: pdfInstagram.compartilhamentosPrev,
+      retencaoReels: pdfInstagram.retencaoReels, retencaoReelsPrev: pdfInstagram.retencaoReelsPrev,
+    },
+    li: {
+      impressoes: pdfLinkedin.impressoes, impressoesPrev: pdfLinkedin.impressoesPrev,
+      comentarios: pdfLinkedin.comentarios, comentariosPrev: pdfLinkedin.comentariosPrev,
+      ctr: pdfLinkedin.ctr, ctrPrev: pdfLinkedin.ctrPrev,
+      segQual: pdfLinkedin.seguidoresQualificados, segQualPrev: pdfLinkedin.seguidoresQualificadosPrev,
+    },
+    yt: {
+      watchTime: pdfYoutube.watchTime, watchTimePrev: pdfYoutube.watchTimePrev,
+      retencao: pdfYoutube.retencaoMedia, retencaoPrev: pdfYoutube.retencaoMediaPrev,
+      ctrThumb: pdfYoutube.ctrThumbnail, ctrThumbPrev: pdfYoutube.ctrThumbnailPrev,
+      inscricoes: pdfYoutube.inscricoesPorVideo, inscricoesPrev: pdfYoutube.inscricoesPorVideoPrev,
+    },
+  }), [pdfInstagram, pdfLinkedin, pdfYoutube])
+
+  // Chart data for PDF (calculated from mock data)
+  const igTrend = igPlatformData?.trend
+  const liTrend = liPlatformData?.trend
+  const ytTrend = ytPlatformData?.trend
+  const totalDaysPdf = daysBetween(ranges.analise.start, ranges.analise.end)
+
+  const pdfChartData = useMemo(() => {
+    const igCurrent = igMockFiltered.current
+    const liCurrent = liMockFiltered.current
+    const ytCurrent = ytMockFiltered.current
+
+    const IG: [number, number, number] = [225, 48, 108]
+    const LI: [number, number, number] = [10, 102, 194]
+    const YT: [number, number, number] = [255, 0, 0]
+
+    return {
+      instagram: [
+        { title: 'Alcance (Distribuição)', data: isReportei ? trendToChartData(igTrend?.reach, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.alcance), color: IG, type: 'line' as const },
+        { title: 'Salvamentos (Qualidade)', data: isReportei ? trendToChartData(igTrend?.saves, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.salvamentos), color: IG, type: 'bar' as const },
+        { title: 'Retenção de Reels (%)', data: isReportei ? trendToChartData(igTrend?.reels_engagement_rate || igTrend?.interaction_rate, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.retencaoReels, 'avg'), color: IG, type: 'line' as const, suffix: '%' },
+        { title: 'Cliques no Link (Intenção)', data: isReportei ? trendToChartData(igTrend?.clicks, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.cliquesLink), color: IG, type: 'bar' as const },
+      ],
+      linkedin: [
+        { title: 'Impressões (Distribuição)', data: isReportei ? trendToChartData(liTrend?.impressions, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.impressoes), color: LI, type: 'line' as const },
+        { title: 'Comentários (Profundidade)', data: isReportei ? trendToChartData(liTrend?.comments, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.comentarios), color: LI, type: 'bar' as const },
+        { title: 'CTR (%)', data: isReportei ? trendToChartData(liTrend?.ctr, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.ctr, 'avg'), color: LI, type: 'line' as const, suffix: '%' },
+        { title: 'Seguidores Qualificados', data: isReportei ? trendToChartData(liTrend?.new_followers, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.seguidoresQualificados), color: LI, type: 'bar' as const },
+      ],
+      youtube: [
+        { title: 'Watch Time (horas)', data: isReportei ? trendToChartData(ytTrend?.watch_time, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.watchTime), color: YT, type: 'bar' as const, suffix: 'h' },
+        { title: 'Retenção Média (%)', data: isReportei ? trendToChartData(ytTrend?.retention, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.retencaoMedia, 'avg'), color: YT, type: 'line' as const, suffix: '%' },
+        { title: 'CTR Thumbnail (%)', data: isReportei ? trendToChartData(ytTrend?.ctr, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.ctrThumbnail, 'avg'), color: YT, type: 'line' as const, suffix: '%' },
+        { title: 'Inscrições por Vídeo', data: isReportei ? trendToChartData(ytTrend?.new_followers, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.inscricoesPorVideo, 'avg'), color: YT, type: 'bar' as const },
+      ],
+    }
+  }, [igMockFiltered, liMockFiltered, ytMockFiltered, isReportei, igTrend, liTrend, ytTrend, ranges, totalDaysPdf])
+
+  const handleExportPDF = useCallback(async () => {
+    setExporting(true)
+
+    // Read notes directly from localStorage at export time (separate keys per platform)
+    const notesForPdf: PlatformNote[] = []
+    for (const p of ['instagram', 'linkedin', 'youtube'] as Platform[]) {
+      try {
+        const raw = localStorage.getItem(`content-dashboard:notes-${p}`)
+        if (raw) {
+          const parsed: PlatformNote[] = JSON.parse(raw)
+          notesForPdf.push(...parsed)
+        }
+      } catch { /* empty */ }
+    }
+
+    try {
+      const { exportAnalyticsPDF } = await import('@/lib/pdf-export')
+      await exportAnalyticsPDF({
+        ranges,
+        instagram: pdfInstagram,
+        linkedin: pdfLinkedin,
+        youtube: pdfYoutube,
+        comparativo: pdfComparativo,
+        notes: notesForPdf,
+        chartData: pdfChartData,
+      })
+    } catch (err) {
+      console.error('PDF export error:', err)
+    } finally {
+      setExporting(false)
+    }
+  }, [ranges, pdfInstagram, pdfLinkedin, pdfYoutube, pdfComparativo, pdfChartData])
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Métricas estratégicas por plataforma — cada rede tem suas métricas ideais
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Métricas estratégicas por plataforma — cada rede tem suas métricas ideais
+          </p>
+        </div>
+        <Button
+          onClick={handleExportPDF}
+          disabled={exporting}
+          className="gap-2"
+          variant="outline"
+        >
+          {exporting ? (
+            <Loader2Icon className="size-4 animate-spin" />
+          ) : (
+            <DownloadIcon className="size-4" />
+          )}
+          {exporting ? 'Gerando PDF...' : 'Exportar PDF'}
+        </Button>
       </div>
 
       {/* Reportei Config + Data Source Toggle */}
@@ -1946,8 +2148,6 @@ export default function AnalyticsPage() {
       {activeTab === 'youtube' && <YouTubeAnalytics ranges={ranges} isMounted={isMounted} platformData={ytPlatformData} isRealData={isReportei} realDataLoading={reporteiLoading} realDataError={reporteiError} />}
       {activeTab === 'comparativo' && <ComparativoAnalytics ranges={ranges} isMounted={isMounted} allPlatformData={isReportei ? reporteiPlatforms : undefined} />}
 
-      {/* Analytics Notes */}
-      <AnalyticsNotes ranges={ranges} />
     </div>
   )
 }

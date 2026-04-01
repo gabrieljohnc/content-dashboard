@@ -60,6 +60,13 @@ export interface CompetitorPost {
   dataPublicacao: string
 }
 
+export interface AnalysisNote {
+  id: string
+  plataforma: Platform
+  texto: string
+  criadoEm: string
+}
+
 export interface NewsItem {
   id: string
   titulo: string
