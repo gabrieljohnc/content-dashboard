@@ -660,15 +660,14 @@ function generateInstagramMetrics(): InstagramMetrics[] {
     const compartilhamentos = Math.round(
       (95 + noise() * 35) * growthFactor
     )
-    const retencaoReels = Math.min(
-      100,
-      Math.max(10, 42 + noise() * 8)
-    )
+    const watchTime = Math.round(
+      (35 + noise() * 12) * growthFactor * weekendFactor * 10
+    ) / 10
     const cliquesLink = Math.round(
       (120 + noise() * 45) * growthFactor * weekendFactor
     )
-    const curtidas = Math.round(
-      (620 + noise() * 200) * growthFactor * weekendFactor
+    const interacoesDirect = Math.round(
+      (45 + noise() * 20) * growthFactor * weekendFactor
     )
     const comentarios = Math.round(
       (85 + noise() * 30) * growthFactor
@@ -680,9 +679,9 @@ function generateInstagramMetrics(): InstagramMetrics[] {
       alcance: Math.max(alcance, 3000),
       salvamentos: Math.max(salvamentos, 20),
       compartilhamentos: Math.max(compartilhamentos, 10),
-      retencaoReels: Math.round(retencaoReels * 10) / 10,
+      watchTime: Math.max(watchTime, 5),
       cliquesLink: Math.max(cliquesLink, 10),
-      curtidas: Math.max(curtidas, 80),
+      interacoesDirect: Math.max(interacoesDirect, 5),
       comentarios: Math.max(comentarios, 10),
       seguidores: Math.max(seguidores, 14200),
     })
@@ -814,9 +813,9 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 94200,
     salvamentos: 820,
     compartilhamentos: 1380,
-    curtidas: 3840,
+    interacoesDirect: 142,
     comentarios: 512,
-    retencaoReels: 58,
+    watchTime: 58,
     dataPublicacao: '2025-12-22T10:00:00Z',
   },
   {
@@ -826,7 +825,7 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 78600,
     salvamentos: 1240,
     compartilhamentos: 940,
-    curtidas: 2960,
+    interacoesDirect: 98,
     comentarios: 348,
     dataPublicacao: '2026-01-14T12:00:00Z',
   },
@@ -837,7 +836,7 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 61400,
     salvamentos: 680,
     compartilhamentos: 1120,
-    curtidas: 2540,
+    interacoesDirect: 76,
     comentarios: 287,
     dataPublicacao: '2026-01-28T11:00:00Z',
   },
@@ -848,9 +847,9 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 72800,
     salvamentos: 890,
     compartilhamentos: 760,
-    curtidas: 3120,
+    interacoesDirect: 118,
     comentarios: 423,
-    retencaoReels: 52,
+    watchTime: 52,
     dataPublicacao: '2026-02-10T10:00:00Z',
   },
   {
@@ -860,7 +859,7 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 58300,
     salvamentos: 1040,
     compartilhamentos: 680,
-    curtidas: 2180,
+    interacoesDirect: 64,
     comentarios: 264,
     dataPublicacao: '2026-02-24T12:00:00Z',
   },
@@ -871,9 +870,9 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 83500,
     salvamentos: 1160,
     compartilhamentos: 1240,
-    curtidas: 4210,
+    interacoesDirect: 156,
     comentarios: 618,
-    retencaoReels: 62,
+    watchTime: 62,
     dataPublicacao: '2026-03-08T11:00:00Z',
   },
 ]

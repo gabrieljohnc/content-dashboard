@@ -222,9 +222,9 @@ export async function exportAnalyticsPDF({
     alcance: number; alcancePrev: number
     salvamentos: number; salvamentosPrev: number
     compartilhamentos: number; compartilhamentosPrev: number
-    retencaoReels: number; retencaoReelsPrev: number
+    watchTime: number; watchTimePrev: number
     cliquesLink: number; cliquesLinkPrev: number
-    curtidas: number; curtidasPrev: number
+    interacoesDirect: number; interacoesDirectPrev: number
     seguidores: number
   }
   linkedin: {
@@ -245,7 +245,7 @@ export async function exportAnalyticsPDF({
     inscritos: number
   }
   comparativo: {
-    ig: { alcance: number; alcancePrev: number; salvamentos: number; salvamentosPrev: number; compartilhamentos: number; compartilhamentosPrev: number; retencaoReels: number; retencaoReelsPrev: number }
+    ig: { alcance: number; alcancePrev: number; salvamentos: number; salvamentosPrev: number; compartilhamentos: number; compartilhamentosPrev: number; watchTime: number; watchTimePrev: number }
     li: { impressoes: number; impressoesPrev: number; comentarios: number; comentariosPrev: number; ctr: number; ctrPrev: number; segQual: number; segQualPrev: number }
     yt: { watchTime: number; watchTimePrev: number; retencao: number; retencaoPrev: number; ctrThumb: number; ctrThumbPrev: number; inscricoes: number; inscricoesPrev: number }
   }
@@ -516,9 +516,9 @@ export async function exportAnalyticsPDF({
     makeKpiRow('Alcance', instagram.alcance, instagram.alcancePrev),
     makeKpiRow('Salvamentos', instagram.salvamentos, instagram.salvamentosPrev),
     makeKpiRow('Compartilhamentos', instagram.compartilhamentos, instagram.compartilhamentosPrev),
-    makeKpiRow('Retenção Reels', instagram.retencaoReels, instagram.retencaoReelsPrev, 'percent'),
+    makeKpiRow('Watch Time', instagram.watchTime, instagram.watchTimePrev, 'hours'),
     makeKpiRow('Cliques no Link', instagram.cliquesLink, instagram.cliquesLinkPrev),
-    makeKpiRow('Curtidas', instagram.curtidas, instagram.curtidasPrev),
+    makeKpiRow('Interações no Direct', instagram.interacoesDirect, instagram.interacoesDirectPrev),
   ], IG_COLOR, y)
 
   doc.setTextColor(161, 161, 170)
@@ -589,7 +589,7 @@ export async function exportAnalyticsPDF({
     makeKpiRow('Alcance', comparativo.ig.alcance, comparativo.ig.alcancePrev),
     makeKpiRow('Salvamentos', comparativo.ig.salvamentos, comparativo.ig.salvamentosPrev),
     makeKpiRow('Compartilhamentos', comparativo.ig.compartilhamentos, comparativo.ig.compartilhamentosPrev),
-    makeKpiRow('Retenção Reels', comparativo.ig.retencaoReels, comparativo.ig.retencaoReelsPrev, 'percent'),
+    makeKpiRow('Watch Time', comparativo.ig.watchTime, comparativo.ig.watchTimePrev, 'hours'),
   ], IG_COLOR, y)
 
   y = drawNotes('instagram', IG_COLOR, 'Instagram', y)

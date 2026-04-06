@@ -794,8 +794,8 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
 
   const zeroMetrics = {
     alcance: 0, alcancePrev: 0, salvamentos: 0, salvamentosPrev: 0,
-    compartilhamentos: 0, compartilhamentosPrev: 0, retencaoReels: 0, retencaoReelsPrev: 0,
-    cliquesLink: 0, cliquesLinkPrev: 0, curtidas: 0, curtidasPrev: 0, seguidores: 0,
+    compartilhamentos: 0, compartilhamentosPrev: 0, watchTime: 0, watchTimePrev: 0,
+    cliquesLink: 0, cliquesLinkPrev: 0, interacoesDirect: 0, interacoesDirectPrev: 0, seguidores: 0,
   }
 
   const metrics = useMemo(() => {
@@ -810,12 +810,12 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
         salvamentosPrev: prev.saves || 0,
         compartilhamentos: m.shares || 0,
         compartilhamentosPrev: prev.shares || 0,
-        retencaoReels: m.reels_engagement_rate || m.interaction_rate || 0,
-        retencaoReelsPrev: prev.reels_engagement_rate || prev.interaction_rate || 0,
+        watchTime: m.watch_time || m.reels_watch_time || 0,
+        watchTimePrev: prev.watch_time || prev.reels_watch_time || 0,
         cliquesLink: m.clicks || 0,
         cliquesLinkPrev: prev.clicks || 0,
-        curtidas: m.likes || 0,
-        curtidasPrev: prev.likes || 0,
+        interacoesDirect: m.direct_interactions || m.story_replies || 0,
+        interacoesDirectPrev: prev.direct_interactions || prev.story_replies || 0,
         seguidores: m.followers || 0,
       }
     }
@@ -832,12 +832,12 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
       salvamentosPrev: sum(previous, 'salvamentos'),
       compartilhamentos: sum(current, 'compartilhamentos'),
       compartilhamentosPrev: sum(previous, 'compartilhamentos'),
-      retencaoReels: avg(current, 'retencaoReels'),
-      retencaoReelsPrev: avg(previous, 'retencaoReels'),
+      watchTime: sum(current, 'watchTime'),
+      watchTimePrev: sum(previous, 'watchTime'),
       cliquesLink: sum(current, 'cliquesLink'),
       cliquesLinkPrev: sum(previous, 'cliquesLink'),
-      curtidas: sum(current, 'curtidas'),
-      curtidasPrev: sum(previous, 'curtidas'),
+      interacoesDirect: sum(current, 'interacoesDirect'),
+      interacoesDirectPrev: sum(previous, 'interacoesDirect'),
       seguidores: current.length > 0 ? current[current.length - 1].seguidores : 0,
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -850,8 +850,8 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
   const alcanceCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.alcance), [previous, compDays, isRealData])
   const salvamentosData = useMemo(() => isRealData ? trendToChartData(trend?.saves, ranges.analise) : dailyData(current, totalDays, (m) => m.salvamentos), [current, totalDays, isRealData, trend, ranges.analise])
   const salvamentosCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.salvamentos), [previous, compDays, isRealData])
-  const retencaoData = useMemo(() => isRealData ? trendToChartData(trend?.reels_engagement_rate || trend?.interaction_rate, ranges.analise) : dailyData(current, totalDays, (m) => m.retencaoReels, 'avg'), [current, totalDays, isRealData, trend, ranges.analise])
-  const retencaoCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.retencaoReels, 'avg'), [previous, compDays, isRealData])
+  const watchTimeData = useMemo(() => isRealData ? trendToChartData(trend?.watch_time || trend?.reels_watch_time, ranges.analise) : dailyData(current, totalDays, (m) => m.watchTime), [current, totalDays, isRealData, trend, ranges.analise])
+  const watchTimeCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.watchTime), [previous, compDays, isRealData])
   const cliquesData = useMemo(() => isRealData ? trendToChartData(trend?.clicks, ranges.analise) : dailyData(current, totalDays, (m) => m.cliquesLink), [current, totalDays, isRealData, trend, ranges.analise])
   const cliquesCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.cliquesLink), [previous, compDays, isRealData])
 
@@ -893,11 +893,11 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           isKey
         />
         <MetricCard
-          label="Retenção Reels"
-          sublabel="Prende atenção"
-          value={formatPercent(metrics.retencaoReels)}
-          change={calcChange(metrics.retencaoReels, metrics.retencaoReelsPrev)}
-          tooltip="% médio do Reel assistido. Instagram Insights — acima de 50% é excelente; o algoritmo prioriza alta retenção."
+          label="Watch Time"
+          sublabel="Tempo de tela"
+          value={`${formatNumber(metrics.watchTime)}h`}
+          change={calcChange(metrics.watchTime, metrics.watchTimePrev)}
+          tooltip="Total de horas que o público assistiu seus Reels e vídeos. Instagram Insights — o algoritmo prioriza conteúdo que mantém as pessoas na plataforma."
           isKey
         />
         <MetricCard
@@ -908,10 +908,10 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           tooltip="Cliques no link da bio ou stickers de link. Instagram Insights — mede intenção real de ação."
         />
         <MetricCard
-          label="Curtidas"
-          value={formatNumber(metrics.curtidas)}
-          change={calcChange(metrics.curtidas, metrics.curtidasPrev)}
-          tooltip="Total de curtidas nos posts. Instagram Insights — métrica de vaidade, menor peso no algoritmo."
+          label="Interações no Direct"
+          value={formatNumber(metrics.interacoesDirect)}
+          change={calcChange(metrics.interacoesDirect, metrics.interacoesDirectPrev)}
+          tooltip="Respostas a Stories e mensagens diretas geradas pelo conteúdo. Instagram Insights — sinal de conexão real com a audiência e alto valor para o algoritmo."
         />
       </div>
 
@@ -928,8 +928,8 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           <ChartCard title="Salvamentos (Qualidade)" isMounted={isMounted}>
             <SimpleBarChart data={salvamentosData} comparisonData={salvamentosCompData} color={color} isMounted={isMounted} />
           </ChartCard>
-          <ChartCard title="Retenção de Reels (%)" isMounted={isMounted}>
-            <SimpleLineChart data={retencaoData} comparisonData={retencaoCompData} color={color} suffix="%" isMounted={isMounted} />
+          <ChartCard title="Watch Time (horas)" isMounted={isMounted}>
+            <SimpleBarChart data={watchTimeData} comparisonData={watchTimeCompData} color={color} isMounted={isMounted} />
           </ChartCard>
           <ChartCard title="Cliques no Link (Intenção)" isMounted={isMounted}>
             <SimpleBarChart data={cliquesData} comparisonData={cliquesCompData} color={color} isMounted={isMounted} />
@@ -1281,18 +1281,17 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
         alcance: m.reach || 0, alcancePrev: p.reach || 0,
         salvamentos: m.saves || 0, salvamentosPrev: p.saves || 0,
         compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
-        retencaoReels: m.reels_engagement_rate || m.interaction_rate || 0,
-        retencaoReelsPrev: p.reels_engagement_rate || p.interaction_rate || 0,
+        watchTime: m.watch_time || m.reels_watch_time || 0,
+        watchTimePrev: p.watch_time || p.reels_watch_time || 0,
       }
     }
     const c = igData.current, pv = igData.previous
     const sum = (arr: typeof c, k: keyof typeof c[0]) => arr.reduce((s, m) => s + (m[k] as number), 0)
-    const avg = (arr: typeof c, k: keyof typeof c[0]) => arr.length > 0 ? sum(arr, k) / arr.length : 0
     return {
       alcance: sum(c, 'alcance'), alcancePrev: sum(pv, 'alcance'),
       salvamentos: sum(c, 'salvamentos'), salvamentosPrev: sum(pv, 'salvamentos'),
       compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
-      retencaoReels: avg(c, 'retencaoReels'), retencaoReelsPrev: avg(pv, 'retencaoReels'),
+      watchTime: sum(c, 'watchTime'), watchTimePrev: sum(pv, 'watchTime'),
     }
   }, [igData, hasReal, igReal])
 
@@ -1376,11 +1375,11 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
                 { label: 'Alcance', cur: ig.alcance, prev: ig.alcancePrev, fmt: 'number' as const },
                 { label: 'Salvamentos', cur: ig.salvamentos, prev: ig.salvamentosPrev, fmt: 'number' as const },
                 { label: 'Compartilhamentos', cur: ig.compartilhamentos, prev: ig.compartilhamentosPrev, fmt: 'number' as const },
-                { label: 'Retenção Reels', cur: ig.retencaoReels, prev: ig.retencaoReelsPrev, fmt: 'percent' as const },
-              ]).map((row) => {
+                { label: 'Watch Time', cur: ig.watchTime, prev: ig.watchTimePrev, fmt: 'hours' as const },
+              ] as { label: string; cur: number; prev: number; fmt: 'number' | 'percent' | 'hours' }[]).map((row) => {
                 const change = calcChange(row.cur, row.prev)
-                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : formatNumber(row.cur)
-                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : formatNumber(row.prev)
+                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : row.fmt === 'hours' ? `${formatNumber(row.cur)}h` : formatNumber(row.cur)
+                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : row.fmt === 'hours' ? `${formatNumber(row.prev)}h` : formatNumber(row.prev)
                 return (
                   <TableRow key={row.label}>
                     <TableCell className="font-medium">{row.label}</TableCell>
@@ -1424,10 +1423,10 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
                 { label: 'Comentários', cur: li.comentarios, prev: li.comentariosPrev, fmt: 'number' as const },
                 { label: 'CTR', cur: li.ctr, prev: li.ctrPrev, fmt: 'percent' as const },
                 { label: 'Seguidores Qualificados', cur: li.segQual, prev: li.segQualPrev, fmt: 'number' as const },
-              ]).map((row) => {
+              ] as { label: string; cur: number; prev: number; fmt: 'number' | 'percent' | 'hours' }[]).map((row) => {
                 const change = calcChange(row.cur, row.prev)
-                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : formatNumber(row.cur)
-                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : formatNumber(row.prev)
+                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : row.fmt === 'hours' ? `${formatNumber(row.cur)}h` : formatNumber(row.cur)
+                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : row.fmt === 'hours' ? `${formatNumber(row.prev)}h` : formatNumber(row.prev)
                 return (
                   <TableRow key={row.label}>
                     <TableCell className="font-medium">{row.label}</TableCell>
@@ -1913,9 +1912,9 @@ export default function AnalyticsPage() {
         alcance: m.reach || 0, alcancePrev: p.reach || 0,
         salvamentos: m.saves || 0, salvamentosPrev: p.saves || 0,
         compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
-        retencaoReels: m.reels_engagement_rate || m.interaction_rate || 0, retencaoReelsPrev: p.reels_engagement_rate || p.interaction_rate || 0,
+        watchTime: m.watch_time || m.reels_watch_time || 0, watchTimePrev: p.watch_time || p.reels_watch_time || 0,
         cliquesLink: m.clicks || 0, cliquesLinkPrev: p.clicks || 0,
-        curtidas: m.likes || 0, curtidasPrev: p.likes || 0,
+        interacoesDirect: m.direct_interactions || m.story_replies || 0, interacoesDirectPrev: p.direct_interactions || p.story_replies || 0,
         seguidores: m.followers || 0,
       }
     }
@@ -1926,9 +1925,9 @@ export default function AnalyticsPage() {
       alcance: sum(c, 'alcance'), alcancePrev: sum(pv, 'alcance'),
       salvamentos: sum(c, 'salvamentos'), salvamentosPrev: sum(pv, 'salvamentos'),
       compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
-      retencaoReels: avg(c, 'retencaoReels'), retencaoReelsPrev: avg(pv, 'retencaoReels'),
+      watchTime: sum(c, 'watchTime'), watchTimePrev: sum(pv, 'watchTime'),
       cliquesLink: sum(c, 'cliquesLink'), cliquesLinkPrev: sum(pv, 'cliquesLink'),
-      curtidas: sum(c, 'curtidas'), curtidasPrev: sum(pv, 'curtidas'),
+      interacoesDirect: sum(c, 'interacoesDirect'), interacoesDirectPrev: sum(pv, 'interacoesDirect'),
       seguidores: c.length > 0 ? c[c.length - 1].seguidores : 0,
     }
   }, [igMockFiltered, isReportei, igPlatformData])
@@ -1990,7 +1989,7 @@ export default function AnalyticsPage() {
       alcance: pdfInstagram.alcance, alcancePrev: pdfInstagram.alcancePrev,
       salvamentos: pdfInstagram.salvamentos, salvamentosPrev: pdfInstagram.salvamentosPrev,
       compartilhamentos: pdfInstagram.compartilhamentos, compartilhamentosPrev: pdfInstagram.compartilhamentosPrev,
-      retencaoReels: pdfInstagram.retencaoReels, retencaoReelsPrev: pdfInstagram.retencaoReelsPrev,
+      watchTime: pdfInstagram.watchTime, watchTimePrev: pdfInstagram.watchTimePrev,
     },
     li: {
       impressoes: pdfLinkedin.impressoes, impressoesPrev: pdfLinkedin.impressoesPrev,
@@ -2025,7 +2024,7 @@ export default function AnalyticsPage() {
       instagram: [
         { title: 'Alcance (Distribuição)', data: isReportei ? trendToChartData(igTrend?.reach, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.alcance), color: IG, type: 'line' as const },
         { title: 'Salvamentos (Qualidade)', data: isReportei ? trendToChartData(igTrend?.saves, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.salvamentos), color: IG, type: 'bar' as const },
-        { title: 'Retenção de Reels (%)', data: isReportei ? trendToChartData(igTrend?.reels_engagement_rate || igTrend?.interaction_rate, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.retencaoReels, 'avg'), color: IG, type: 'line' as const, suffix: '%' },
+        { title: 'Watch Time (horas)', data: isReportei ? trendToChartData(igTrend?.watch_time || igTrend?.reels_watch_time, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.watchTime), color: IG, type: 'bar' as const, suffix: 'h' },
         { title: 'Cliques no Link (Intenção)', data: isReportei ? trendToChartData(igTrend?.clicks, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.cliquesLink), color: IG, type: 'bar' as const },
       ],
       linkedin: [

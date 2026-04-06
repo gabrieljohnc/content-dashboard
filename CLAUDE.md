@@ -74,8 +74,8 @@ src/
 ## Analytics — Métricas por Plataforma
 
 ### Instagram (Atenção e Distribuição)
-- **KPIs**: Alcance, Salvamentos, Compartilhamentos, Retenção Reels
-- Insight: "Curtida é vaidade. Salvamento e compartilhamento = conteúdo forte."
+- **KPIs**: Alcance, Salvamentos, Compartilhamentos, Watch Time
+- Insight: "Salvamento e compartilhamento = conteúdo forte. Watch Time e interações no Direct = conexão real."
 
 ### LinkedIn (Autoridade e Conversão)
 - **KPIs**: Impressões, Comentários, CTR, Seguidores Qualificados

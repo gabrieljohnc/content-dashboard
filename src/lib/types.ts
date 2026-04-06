@@ -87,9 +87,9 @@ export interface InstagramMetrics {
   alcance: number
   salvamentos: number
   compartilhamentos: number
-  retencaoReels: number // percentage
+  watchTime: number // hours
   cliquesLink: number
-  curtidas: number
+  interacoesDirect: number
   comentarios: number
   seguidores: number
 }
@@ -128,9 +128,9 @@ export interface TopPostInstagram {
   alcance: number
   salvamentos: number
   compartilhamentos: number
-  curtidas: number
+  interacoesDirect: number
   comentarios: number
-  retencaoReels?: number
+  watchTime?: number
   dataPublicacao: string
 }
 
