@@ -14,9 +14,10 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
 
 export const STATUS_LABELS: Record<string, string> = {
   backlog: 'Backlog',
-  rascunho: 'Rascunho',
+  aprovacao: 'Aprovação',
+  aprovado: 'Aprovado',
   agendado: 'Agendado',
-  publicado: 'Publicado',
+  postado: 'Postado',
 }
 
 export const POST_TYPE_LABELS: Record<string, string> = {

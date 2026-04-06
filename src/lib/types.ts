@@ -1,6 +1,6 @@
 export type Platform = 'instagram' | 'linkedin' | 'youtube'
 
-export type PostStatus = 'backlog' | 'rascunho' | 'agendado' | 'publicado'
+export type PostStatus = 'backlog' | 'aprovacao' | 'aprovado' | 'agendado' | 'postado'
 
 export type PostType = 'feed' | 'carrossel' | 'reels' | 'stories' | 'video' | 'artigo'
 
@@ -11,6 +11,8 @@ export interface Post {
   tipo: PostType
   plataforma: Platform
   status: PostStatus
+  responsavel: string
+  linkCanva?: string
   dataAgendamento?: string
   dataPublicacao?: string
   criadoEm: string
@@ -98,9 +100,9 @@ export interface LinkedInMetrics {
   data: string
   impressoes: number
   comentarios: number
-  reacoes: number
-  ctr: number // percentage
-  seguidoresQualificados: number
+  salvamentos: number
+  dwellTime: number // seconds
+  novosSeguidores: number
   compartilhamentos: number
   seguidores: number
 }
@@ -110,7 +112,7 @@ export interface YouTubeMetrics {
   ctrThumbnail: number // percentage
   retencaoMedia: number // percentage
   watchTime: number // hours
-  inscricoesPorVideo: number
+  engajamento: number // percentage (likes + comments / views)
   visualizacoes: number
   curtidas: number
   comentarios: number
@@ -139,8 +141,8 @@ export interface TopPostLinkedIn {
   titulo: string
   impressoes: number
   comentarios: number
-  reacoes: number
-  ctr: number
+  salvamentos: number
+  dwellTime: number
   compartilhamentos: number
   dataPublicacao: string
 }
@@ -152,7 +154,7 @@ export interface TopPostYouTube {
   ctrThumbnail: number
   retencaoMedia: number
   watchTime: number
-  inscricoesGeradas: number
+  engajamento: number
   curtidas: number
   comentarios: number
   dataPublicacao: string

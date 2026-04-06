@@ -151,7 +151,11 @@ function DayCell({
     const dateStr = getPostDate(post)
     if (!dateStr) return false
     try {
-      return isSameDay(parseISO(dateStr), day)
+      // Extract YYYY-MM-DD to avoid timezone shift issues
+      const datePart = dateStr.slice(0, 10)
+      const [y, m, d] = datePart.split('-').map(Number)
+      const localDate = new Date(y, m - 1, d)
+      return isSameDay(localDate, day)
     } catch {
       return false
     }

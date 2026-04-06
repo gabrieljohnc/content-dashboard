@@ -78,11 +78,11 @@ src/
 - Insight: "Salvamento e compartilhamento = conteúdo forte. Watch Time e interações no Direct = conexão real."
 
 ### LinkedIn (Autoridade e Conversão)
-- **KPIs**: Impressões, Comentários, CTR, Seguidores Qualificados
+- **KPIs**: Impressões, Comentários, Dwell Time, Novos Seguidores, Salvamentos, Compartilhamentos
 - Insight: "LinkedIn é rede de conversa, não de like."
 
 ### YouTube (Retenção e Profundidade)
-- **KPIs**: Watch Time, Retenção Média, CTR Thumbnail, Inscrições/Vídeo
+- **KPIs**: Watch Time, Retenção Média, CTR Thumbnail, Engajamento, Visualizações, Inscritos
 - Insight: "YouTube não liga pra view, liga pra tempo que você prende a pessoa."
 
 ## Convenções
