@@ -40,10 +40,12 @@ export const mockPosts: Post[] = [
       'A modernização da infraestrutura elétrica é essencial para garantir estabilidade e qualidade no fornecimento de energia. Investimentos em automação e sensores inteligentes permitem identificar falhas em tempo real e reduzir significativamente o tempo de interrupção. ⚡ Saiba mais nos comentários.',
     tipo: 'feed',
     plataforma: 'instagram',
-    status: 'publicado',
-    dataPublicacao: '2026-03-10T10:00:00Z',
-    criadoEm: '2026-03-05T08:00:00Z',
-    atualizadoEm: '2026-03-10T10:00:00Z',
+    status: 'postado',
+    responsavel: 'John',
+    linkCanva: 'https://www.canva.com/design/example1',
+    dataPublicacao: '2026-04-06T10:00:00Z',
+    criadoEm: '2026-04-06T08:00:00Z',
+    atualizadoEm: '2026-04-06T10:00:00Z',
   },
   {
     id: 'post-002',
@@ -52,10 +54,12 @@ export const mockPosts: Post[] = [
       'A ANEEL revisou as tarifas de distribuição para 2026, trazendo reajustes que impactam diretamente residências e empresas. Entenda os componentes que formam a sua conta de luz e como se preparar para as mudanças. Acesse o link na bio para o artigo completo.',
     tipo: 'carrossel',
     plataforma: 'linkedin',
-    status: 'publicado',
-    dataPublicacao: '2026-03-08T09:00:00Z',
-    criadoEm: '2026-03-03T14:00:00Z',
-    atualizadoEm: '2026-03-08T09:00:00Z',
+    status: 'postado',
+    responsavel: 'John',
+    linkCanva: 'https://www.canva.com/design/example2',
+    dataPublicacao: '2026-04-07T09:00:00Z',
+    criadoEm: '2026-04-06T14:00:00Z',
+    atualizadoEm: '2026-04-07T09:00:00Z',
   },
   {
     id: 'post-003',
@@ -64,10 +68,11 @@ export const mockPosts: Post[] = [
       'As smart grids chegaram para revolucionar a forma como distribuímos energia elétrica no Brasil. Com medição inteligente, automação de subestações e integração de fontes renováveis, a concessionária do futuro já é uma realidade. Neste vídeo exploramos os principais projetos em andamento.',
     tipo: 'video',
     plataforma: 'youtube',
-    status: 'publicado',
-    dataPublicacao: '2026-03-05T15:00:00Z',
-    criadoEm: '2026-02-20T10:00:00Z',
-    atualizadoEm: '2026-03-05T15:00:00Z',
+    status: 'postado',
+    responsavel: 'John',
+    dataPublicacao: '2026-04-08T15:00:00Z',
+    criadoEm: '2026-04-06T10:00:00Z',
+    atualizadoEm: '2026-04-08T15:00:00Z',
   },
   {
     id: 'post-004',
@@ -76,10 +81,11 @@ export const mockPosts: Post[] = [
       'DEC (Duração Equivalente de Interrupção por Unidade Consumidora) e FEC (Frequência Equivalente de Interrupção) são os principais indicadores regulatórios de qualidade no setor elétrico. Entenda como eles funcionam e por que impactam diretamente a tarifa que você paga.',
     tipo: 'artigo',
     plataforma: 'linkedin',
-    status: 'publicado',
-    dataPublicacao: '2026-02-28T11:00:00Z',
-    criadoEm: '2026-02-22T09:00:00Z',
-    atualizadoEm: '2026-02-28T11:00:00Z',
+    status: 'postado',
+    responsavel: 'John',
+    dataPublicacao: '2026-04-09T11:00:00Z',
+    criadoEm: '2026-04-07T09:00:00Z',
+    atualizadoEm: '2026-04-09T11:00:00Z',
   },
   {
     id: 'post-005',
@@ -89,9 +95,11 @@ export const mockPosts: Post[] = [
     tipo: 'reels',
     plataforma: 'instagram',
     status: 'agendado',
-    dataAgendamento: '2026-03-22T12:00:00Z',
-    criadoEm: '2026-03-15T10:00:00Z',
-    atualizadoEm: '2026-03-18T16:00:00Z',
+    responsavel: 'John',
+    linkCanva: 'https://www.canva.com/design/example5',
+    dataAgendamento: '2026-04-14T12:00:00Z',
+    criadoEm: '2026-04-08T10:00:00Z',
+    atualizadoEm: '2026-04-10T16:00:00Z',
   },
   {
     id: 'post-006',
@@ -101,9 +109,10 @@ export const mockPosts: Post[] = [
     tipo: 'artigo',
     plataforma: 'linkedin',
     status: 'agendado',
-    dataAgendamento: '2026-03-25T09:00:00Z',
-    criadoEm: '2026-03-12T14:00:00Z',
-    atualizadoEm: '2026-03-17T11:00:00Z',
+    responsavel: 'John',
+    dataAgendamento: '2026-04-15T09:00:00Z',
+    criadoEm: '2026-04-09T14:00:00Z',
+    atualizadoEm: '2026-04-11T11:00:00Z',
   },
   {
     id: 'post-007',
@@ -112,9 +121,10 @@ export const mockPosts: Post[] = [
       'Já se perguntou o que acontece dentro de uma subestação elétrica antes de a energia chegar à sua casa? Neste vídeo mostramos o processo de transformação e distribuição de alta tensão com imagens exclusivas de campo.',
     tipo: 'video',
     plataforma: 'youtube',
-    status: 'rascunho',
-    criadoEm: '2026-03-16T09:00:00Z',
-    atualizadoEm: '2026-03-19T08:00:00Z',
+    status: 'aprovacao',
+    responsavel: 'Lucas',
+    criadoEm: '2026-04-10T09:00:00Z',
+    atualizadoEm: '2026-04-12T08:00:00Z',
   },
   {
     id: 'post-008',
@@ -123,9 +133,10 @@ export const mockPosts: Post[] = [
       'Quando os reservatórios caem abaixo do nível crítico, o acionamento de termelétricas eleva o custo da energia e ativa bandeiras tarifárias. Entenda essa relação e como a diversificação da matriz elétrica protege o consumidor.',
     tipo: 'carrossel',
     plataforma: 'instagram',
-    status: 'rascunho',
-    criadoEm: '2026-03-17T15:00:00Z',
-    atualizadoEm: '2026-03-19T09:00:00Z',
+    status: 'aprovacao',
+    responsavel: 'Lucas',
+    criadoEm: '2026-04-11T15:00:00Z',
+    atualizadoEm: '2026-04-13T09:00:00Z',
   },
   {
     id: 'post-009',
@@ -134,9 +145,10 @@ export const mockPosts: Post[] = [
       'As grandes distribuidoras de energia elétrica do Brasil vêm ampliando seus compromissos ESG com metas de redução de emissões, programas de eficiência energética e inclusão social. Saiba o que as principais concessionárias estão fazendo.',
     tipo: 'artigo',
     plataforma: 'linkedin',
-    status: 'rascunho',
-    criadoEm: '2026-03-14T10:00:00Z',
-    atualizadoEm: '2026-03-18T14:00:00Z',
+    status: 'aprovacao',
+    responsavel: 'Lucas',
+    criadoEm: '2026-04-12T10:00:00Z',
+    atualizadoEm: '2026-04-14T14:00:00Z',
   },
   {
     id: 'post-010',
@@ -146,8 +158,9 @@ export const mockPosts: Post[] = [
     tipo: 'stories',
     plataforma: 'instagram',
     status: 'backlog',
-    criadoEm: '2026-03-18T11:00:00Z',
-    atualizadoEm: '2026-03-18T11:00:00Z',
+    responsavel: 'John',
+    criadoEm: '2026-04-14T11:00:00Z',
+    atualizadoEm: '2026-04-14T11:00:00Z',
   },
   {
     id: 'post-011',
@@ -157,8 +170,9 @@ export const mockPosts: Post[] = [
     tipo: 'artigo',
     plataforma: 'linkedin',
     status: 'backlog',
-    criadoEm: '2026-03-19T08:00:00Z',
-    atualizadoEm: '2026-03-19T08:00:00Z',
+    responsavel: 'John',
+    criadoEm: '2026-04-16T08:00:00Z',
+    atualizadoEm: '2026-04-16T08:00:00Z',
   },
   {
     id: 'post-012',
@@ -168,8 +182,9 @@ export const mockPosts: Post[] = [
     tipo: 'video',
     plataforma: 'youtube',
     status: 'backlog',
-    criadoEm: '2026-03-19T09:00:00Z',
-    atualizadoEm: '2026-03-19T09:00:00Z',
+    responsavel: 'John',
+    criadoEm: '2026-04-17T09:00:00Z',
+    atualizadoEm: '2026-04-17T09:00:00Z',
   },
 ]
 
@@ -660,15 +675,14 @@ function generateInstagramMetrics(): InstagramMetrics[] {
     const compartilhamentos = Math.round(
       (95 + noise() * 35) * growthFactor
     )
-    const retencaoReels = Math.min(
-      100,
-      Math.max(10, 42 + noise() * 8)
-    )
+    const watchTime = Math.round(
+      (35 + noise() * 12) * growthFactor * weekendFactor * 10
+    ) / 10
     const cliquesLink = Math.round(
       (120 + noise() * 45) * growthFactor * weekendFactor
     )
-    const curtidas = Math.round(
-      (620 + noise() * 200) * growthFactor * weekendFactor
+    const interacoesDirect = Math.round(
+      (45 + noise() * 20) * growthFactor * weekendFactor
     )
     const comentarios = Math.round(
       (85 + noise() * 30) * growthFactor
@@ -680,9 +694,9 @@ function generateInstagramMetrics(): InstagramMetrics[] {
       alcance: Math.max(alcance, 3000),
       salvamentos: Math.max(salvamentos, 20),
       compartilhamentos: Math.max(compartilhamentos, 10),
-      retencaoReels: Math.round(retencaoReels * 10) / 10,
+      watchTime: Math.max(watchTime, 5),
       cliquesLink: Math.max(cliquesLink, 10),
-      curtidas: Math.max(curtidas, 80),
+      interacoesDirect: Math.max(interacoesDirect, 5),
       comentarios: Math.max(comentarios, 10),
       seguidores: Math.max(seguidores, 14200),
     })
@@ -717,11 +731,11 @@ function generateLinkedInMetrics(): LinkedInMetrics[] {
     const comentarios = Math.round(
       (145 + noise() * 50) * growthFactor * weekendFactor
     )
-    const reacoes = Math.round(
-      (380 + noise() * 100) * growthFactor * weekendFactor
+    const salvamentos = Math.round(
+      (180 + noise() * 60) * growthFactor * weekendFactor
     )
-    const ctr = Math.min(12, Math.max(0.5, 3.2 + noise() * 1.0))
-    const seguidoresQualificados = Math.round(
+    const dwellTime = Math.min(120, Math.max(8, (42 + noise() * 15) * growthFactor))
+    const novosSeguidores = Math.round(
       Math.max(0, 28 + noise() * 12)
     )
     const compartilhamentos = Math.round(
@@ -733,9 +747,9 @@ function generateLinkedInMetrics(): LinkedInMetrics[] {
       data: dateStr,
       impressoes: Math.max(impressoes, 4000),
       comentarios: Math.max(comentarios, 10),
-      reacoes: Math.max(reacoes, 40),
-      ctr: Math.round(ctr * 100) / 100,
-      seguidoresQualificados: Math.max(seguidoresQualificados, 0),
+      salvamentos: Math.max(salvamentos, 20),
+      dwellTime: Math.round(dwellTime * 10) / 10,
+      novosSeguidores: Math.max(novosSeguidores, 0),
       compartilhamentos: Math.max(compartilhamentos, 5),
       seguidores: Math.max(seguidores, 22500),
     })
@@ -770,9 +784,7 @@ function generateYouTubeMetrics(): YouTubeMetrics[] {
     const watchTime = Math.round(
       (145 + noise() * 50) * growthFactor * weekendFactor
     )
-    const inscricoesPorVideo = Math.round(
-      Math.max(0, 12 + noise() * 6)
-    )
+    const engajamento = Math.min(15, Math.max(1.5, 5.2 + noise() * 2.5))
     const visualizacoes = Math.round(
       (3200 + noise() * 1200) * growthFactor * weekendFactor
     )
@@ -789,7 +801,7 @@ function generateYouTubeMetrics(): YouTubeMetrics[] {
       ctrThumbnail: Math.round(ctrThumbnail * 10) / 10,
       retencaoMedia: Math.round(retencaoMedia * 10) / 10,
       watchTime: Math.max(watchTime, 20),
-      inscricoesPorVideo: Math.max(inscricoesPorVideo, 0),
+      engajamento: Math.round(engajamento * 10) / 10,
       visualizacoes: Math.max(visualizacoes, 400),
       curtidas: Math.max(curtidas, 20),
       comentarios: Math.max(comentarios, 5),
@@ -814,9 +826,9 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 94200,
     salvamentos: 820,
     compartilhamentos: 1380,
-    curtidas: 3840,
+    interacoesDirect: 142,
     comentarios: 512,
-    retencaoReels: 58,
+    watchTime: 58,
     dataPublicacao: '2025-12-22T10:00:00Z',
   },
   {
@@ -826,7 +838,7 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 78600,
     salvamentos: 1240,
     compartilhamentos: 940,
-    curtidas: 2960,
+    interacoesDirect: 98,
     comentarios: 348,
     dataPublicacao: '2026-01-14T12:00:00Z',
   },
@@ -837,7 +849,7 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 61400,
     salvamentos: 680,
     compartilhamentos: 1120,
-    curtidas: 2540,
+    interacoesDirect: 76,
     comentarios: 287,
     dataPublicacao: '2026-01-28T11:00:00Z',
   },
@@ -848,9 +860,9 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 72800,
     salvamentos: 890,
     compartilhamentos: 760,
-    curtidas: 3120,
+    interacoesDirect: 118,
     comentarios: 423,
-    retencaoReels: 52,
+    watchTime: 52,
     dataPublicacao: '2026-02-10T10:00:00Z',
   },
   {
@@ -860,7 +872,7 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 58300,
     salvamentos: 1040,
     compartilhamentos: 680,
-    curtidas: 2180,
+    interacoesDirect: 64,
     comentarios: 264,
     dataPublicacao: '2026-02-24T12:00:00Z',
   },
@@ -871,9 +883,9 @@ export const mockTopPostsInstagram: TopPostInstagram[] = [
     alcance: 83500,
     salvamentos: 1160,
     compartilhamentos: 1240,
-    curtidas: 4210,
+    interacoesDirect: 156,
     comentarios: 618,
-    retencaoReels: 62,
+    watchTime: 62,
     dataPublicacao: '2026-03-08T11:00:00Z',
   },
 ]
@@ -888,8 +900,8 @@ export const mockTopPostsLinkedIn: TopPostLinkedIn[] = [
     titulo: 'Revisão tarifária 2026: análise completa',
     impressoes: 118400,
     comentarios: 634,
-    reacoes: 4870,
-    ctr: 4.8,
+    salvamentos: 2430,
+    dwellTime: 54.2,
     compartilhamentos: 1240,
     dataPublicacao: '2026-01-15T09:00:00Z',
   },
@@ -898,8 +910,8 @@ export const mockTopPostsLinkedIn: TopPostLinkedIn[] = [
     titulo: 'ESG no setor elétrico: metas 2030',
     impressoes: 104600,
     comentarios: 578,
-    reacoes: 4120,
-    ctr: 3.9,
+    salvamentos: 2060,
+    dwellTime: 47.8,
     compartilhamentos: 1087,
     dataPublicacao: '2026-02-12T09:00:00Z',
   },
@@ -908,8 +920,8 @@ export const mockTopPostsLinkedIn: TopPostLinkedIn[] = [
     titulo: 'DEC e FEC: indicadores regulatórios',
     impressoes: 92800,
     comentarios: 492,
-    reacoes: 3760,
-    ctr: 5.8,
+    salvamentos: 1880,
+    dwellTime: 61.3,
     compartilhamentos: 930,
     dataPublicacao: '2026-03-08T09:00:00Z',
   },
@@ -918,8 +930,8 @@ export const mockTopPostsLinkedIn: TopPostLinkedIn[] = [
     titulo: 'Perdas comerciais: R$ 12 bilhões',
     impressoes: 87300,
     comentarios: 546,
-    reacoes: 3290,
-    ctr: 4.2,
+    salvamentos: 1645,
+    dwellTime: 49.5,
     compartilhamentos: 874,
     dataPublicacao: '2026-02-20T10:00:00Z',
   },
@@ -928,8 +940,8 @@ export const mockTopPostsLinkedIn: TopPostLinkedIn[] = [
     titulo: 'Smart grids no Brasil: estado da arte',
     impressoes: 79400,
     comentarios: 418,
-    reacoes: 2980,
-    ctr: 3.6,
+    salvamentos: 1490,
+    dwellTime: 44.1,
     compartilhamentos: 1156,
     dataPublicacao: '2026-01-30T09:00:00Z',
   },
@@ -938,8 +950,8 @@ export const mockTopPostsLinkedIn: TopPostLinkedIn[] = [
     titulo: 'Mercado livre de energia para PMEs',
     impressoes: 95200,
     comentarios: 384,
-    reacoes: 3540,
-    ctr: 6.2,
+    salvamentos: 1770,
+    dwellTime: 58.7,
     compartilhamentos: 786,
     dataPublicacao: '2026-03-01T10:00:00Z',
   },
@@ -957,7 +969,7 @@ export const mockTopPostsYouTube: TopPostYouTube[] = [
     ctrThumbnail: 8.4,
     retencaoMedia: 65,
     watchTime: 2840,
-    inscricoesGeradas: 312,
+    engajamento: 5.3,
     curtidas: 2180,
     comentarios: 387,
     dataPublicacao: '2025-12-28T15:00:00Z',
@@ -969,7 +981,7 @@ export const mockTopPostsYouTube: TopPostYouTube[] = [
     ctrThumbnail: 7.2,
     retencaoMedia: 52,
     watchTime: 2340,
-    inscricoesGeradas: 284,
+    engajamento: 4.0,
     curtidas: 1890,
     comentarios: 287,
     dataPublicacao: '2026-01-28T15:00:00Z',
@@ -981,7 +993,7 @@ export const mockTopPostsYouTube: TopPostYouTube[] = [
     ctrThumbnail: 9.1,
     retencaoMedia: 44,
     watchTime: 2610,
-    inscricoesGeradas: 418,
+    engajamento: 4.4,
     curtidas: 2640,
     comentarios: 498,
     dataPublicacao: '2026-02-20T15:00:00Z',
@@ -993,7 +1005,7 @@ export const mockTopPostsYouTube: TopPostYouTube[] = [
     ctrThumbnail: 7.8,
     retencaoMedia: 48,
     watchTime: 2480,
-    inscricoesGeradas: 356,
+    engajamento: 4.3,
     curtidas: 2290,
     comentarios: 412,
     dataPublicacao: '2026-01-10T14:00:00Z',
@@ -1005,7 +1017,7 @@ export const mockTopPostsYouTube: TopPostYouTube[] = [
     ctrThumbnail: 6.4,
     retencaoMedia: 46,
     watchTime: 2920,
-    inscricoesGeradas: 390,
+    engajamento: 4.7,
     curtidas: 1740,
     comentarios: 318,
     dataPublicacao: '2026-03-05T15:00:00Z',
@@ -1017,7 +1029,7 @@ export const mockTopPostsYouTube: TopPostYouTube[] = [
     ctrThumbnail: 5.9,
     retencaoMedia: 41,
     watchTime: 1860,
-    inscricoesGeradas: 228,
+    engajamento: 4.4,
     curtidas: 1420,
     comentarios: 246,
     dataPublicacao: '2026-02-08T14:00:00Z',

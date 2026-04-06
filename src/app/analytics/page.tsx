@@ -295,7 +295,7 @@ function MetricCard({
   tooltip?: string
 }) {
   return (
-    <Card className={isKey ? 'ring-1 ring-amber-500/30' : ''}>
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -315,11 +315,6 @@ function MetricCard({
                 </TooltipContent>
               </UiTooltip>
             </TooltipProvider>
-          )}
-          {isKey && (
-            <Badge variant="outline" className="border-amber-500/50 text-amber-400 text-[10px] px-1.5 py-0">
-              KPI
-            </Badge>
           )}
         </div>
         {sublabel && (
@@ -794,8 +789,8 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
 
   const zeroMetrics = {
     alcance: 0, alcancePrev: 0, salvamentos: 0, salvamentosPrev: 0,
-    compartilhamentos: 0, compartilhamentosPrev: 0, retencaoReels: 0, retencaoReelsPrev: 0,
-    cliquesLink: 0, cliquesLinkPrev: 0, curtidas: 0, curtidasPrev: 0, seguidores: 0,
+    compartilhamentos: 0, compartilhamentosPrev: 0, watchTime: 0, watchTimePrev: 0,
+    cliquesLink: 0, cliquesLinkPrev: 0, interacoesDirect: 0, interacoesDirectPrev: 0, seguidores: 0,
   }
 
   const metrics = useMemo(() => {
@@ -810,12 +805,12 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
         salvamentosPrev: prev.saves || 0,
         compartilhamentos: m.shares || 0,
         compartilhamentosPrev: prev.shares || 0,
-        retencaoReels: m.reels_engagement_rate || m.interaction_rate || 0,
-        retencaoReelsPrev: prev.reels_engagement_rate || prev.interaction_rate || 0,
+        watchTime: m.watch_time || m.reels_watch_time || 0,
+        watchTimePrev: prev.watch_time || prev.reels_watch_time || 0,
         cliquesLink: m.clicks || 0,
         cliquesLinkPrev: prev.clicks || 0,
-        curtidas: m.likes || 0,
-        curtidasPrev: prev.likes || 0,
+        interacoesDirect: m.direct_interactions || m.story_replies || 0,
+        interacoesDirectPrev: prev.direct_interactions || prev.story_replies || 0,
         seguidores: m.followers || 0,
       }
     }
@@ -832,12 +827,12 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
       salvamentosPrev: sum(previous, 'salvamentos'),
       compartilhamentos: sum(current, 'compartilhamentos'),
       compartilhamentosPrev: sum(previous, 'compartilhamentos'),
-      retencaoReels: avg(current, 'retencaoReels'),
-      retencaoReelsPrev: avg(previous, 'retencaoReels'),
+      watchTime: sum(current, 'watchTime'),
+      watchTimePrev: sum(previous, 'watchTime'),
       cliquesLink: sum(current, 'cliquesLink'),
       cliquesLinkPrev: sum(previous, 'cliquesLink'),
-      curtidas: sum(current, 'curtidas'),
-      curtidasPrev: sum(previous, 'curtidas'),
+      interacoesDirect: sum(current, 'interacoesDirect'),
+      interacoesDirectPrev: sum(previous, 'interacoesDirect'),
       seguidores: current.length > 0 ? current[current.length - 1].seguidores : 0,
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -850,10 +845,14 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
   const alcanceCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.alcance), [previous, compDays, isRealData])
   const salvamentosData = useMemo(() => isRealData ? trendToChartData(trend?.saves, ranges.analise) : dailyData(current, totalDays, (m) => m.salvamentos), [current, totalDays, isRealData, trend, ranges.analise])
   const salvamentosCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.salvamentos), [previous, compDays, isRealData])
-  const retencaoData = useMemo(() => isRealData ? trendToChartData(trend?.reels_engagement_rate || trend?.interaction_rate, ranges.analise) : dailyData(current, totalDays, (m) => m.retencaoReels, 'avg'), [current, totalDays, isRealData, trend, ranges.analise])
-  const retencaoCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.retencaoReels, 'avg'), [previous, compDays, isRealData])
+  const watchTimeData = useMemo(() => isRealData ? trendToChartData(trend?.watch_time || trend?.reels_watch_time, ranges.analise) : dailyData(current, totalDays, (m) => m.watchTime), [current, totalDays, isRealData, trend, ranges.analise])
+  const watchTimeCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.watchTime), [previous, compDays, isRealData])
+  const compartilhamentosData = useMemo(() => isRealData ? trendToChartData(trend?.shares, ranges.analise) : dailyData(current, totalDays, (m) => m.compartilhamentos), [current, totalDays, isRealData, trend, ranges.analise])
+  const compartilhamentosCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.compartilhamentos), [previous, compDays, isRealData])
   const cliquesData = useMemo(() => isRealData ? trendToChartData(trend?.clicks, ranges.analise) : dailyData(current, totalDays, (m) => m.cliquesLink), [current, totalDays, isRealData, trend, ranges.analise])
   const cliquesCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.cliquesLink), [previous, compDays, isRealData])
+  const directData = useMemo(() => isRealData ? trendToChartData(trend?.direct_interactions || trend?.story_replies, ranges.analise) : dailyData(current, totalDays, (m) => m.interacoesDirect), [current, totalDays, isRealData, trend, ranges.analise])
+  const directCompData = useMemo(() => isRealData ? [] as { label: string; value: number }[] : dailyData(previous, compDays, (m) => m.interacoesDirect), [previous, compDays, isRealData])
 
   return (
     <div className="flex flex-col gap-6">
@@ -874,7 +873,6 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           value={formatNumber(metrics.alcance)}
           change={calcChange(metrics.alcance, metrics.alcancePrev)}
           tooltip="Contas únicas que viram seu conteúdo. Vem do Instagram Insights — mede o poder de distribuição do algoritmo."
-          isKey
         />
         <MetricCard
           label="Salvamentos"
@@ -882,7 +880,6 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           value={formatNumber(metrics.salvamentos)}
           change={calcChange(metrics.salvamentos, metrics.salvamentosPrev)}
           tooltip="Vezes que alguém salvou seu post para ver depois. Instagram Insights — indica conteúdo de alto valor percebido."
-          isKey
         />
         <MetricCard
           label="Compartilhamentos"
@@ -890,15 +887,13 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           value={formatNumber(metrics.compartilhamentos)}
           change={calcChange(metrics.compartilhamentos, metrics.compartilhamentosPrev)}
           tooltip="Envios por DM ou compartilhamentos nos Stories. Instagram Insights — sinal forte de conteúdo relevante."
-          isKey
         />
         <MetricCard
-          label="Retenção Reels"
-          sublabel="Prende atenção"
-          value={formatPercent(metrics.retencaoReels)}
-          change={calcChange(metrics.retencaoReels, metrics.retencaoReelsPrev)}
-          tooltip="% médio do Reel assistido. Instagram Insights — acima de 50% é excelente; o algoritmo prioriza alta retenção."
-          isKey
+          label="Watch Time"
+          sublabel="Tempo de tela"
+          value={`${formatNumber(metrics.watchTime)}h`}
+          change={calcChange(metrics.watchTime, metrics.watchTimePrev)}
+          tooltip="Total de horas que o público assistiu seus Reels e vídeos. Instagram Insights — o algoritmo prioriza conteúdo que mantém as pessoas na plataforma."
         />
         <MetricCard
           label="Cliques no Link"
@@ -908,10 +903,11 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           tooltip="Cliques no link da bio ou stickers de link. Instagram Insights — mede intenção real de ação."
         />
         <MetricCard
-          label="Curtidas"
-          value={formatNumber(metrics.curtidas)}
-          change={calcChange(metrics.curtidas, metrics.curtidasPrev)}
-          tooltip="Total de curtidas nos posts. Instagram Insights — métrica de vaidade, menor peso no algoritmo."
+          label="Interações no Direct"
+          sublabel="Conexão real"
+          value={formatNumber(metrics.interacoesDirect)}
+          change={calcChange(metrics.interacoesDirect, metrics.interacoesDirectPrev)}
+          tooltip="Respostas a Stories e mensagens diretas geradas pelo conteúdo. Instagram Insights — sinal de conexão real com a audiência e alto valor para o algoritmo."
         />
       </div>
 
@@ -928,11 +924,17 @@ function InstagramAnalytics({ ranges, isMounted, platformData, isRealData, realD
           <ChartCard title="Salvamentos (Qualidade)" isMounted={isMounted}>
             <SimpleBarChart data={salvamentosData} comparisonData={salvamentosCompData} color={color} isMounted={isMounted} />
           </ChartCard>
-          <ChartCard title="Retenção de Reels (%)" isMounted={isMounted}>
-            <SimpleLineChart data={retencaoData} comparisonData={retencaoCompData} color={color} suffix="%" isMounted={isMounted} />
+          <ChartCard title="Compartilhamentos (Conteúdo forte)" isMounted={isMounted}>
+            <SimpleBarChart data={compartilhamentosData} comparisonData={compartilhamentosCompData} color={color} isMounted={isMounted} />
+          </ChartCard>
+          <ChartCard title="Watch Time (horas)" isMounted={isMounted}>
+            <SimpleBarChart data={watchTimeData} comparisonData={watchTimeCompData} color={color} isMounted={isMounted} />
           </ChartCard>
           <ChartCard title="Cliques no Link (Intenção)" isMounted={isMounted}>
             <SimpleBarChart data={cliquesData} comparisonData={cliquesCompData} color={color} isMounted={isMounted} />
+          </ChartCard>
+          <ChartCard title="Interações no Direct (Conexão)" isMounted={isMounted}>
+            <SimpleBarChart data={directData} comparisonData={directCompData} color={color} isMounted={isMounted} />
           </ChartCard>
         </div>
       ) : null}
@@ -957,8 +959,8 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
 
   const zeroMetrics = {
     impressoes: 0, impressoesPrev: 0, comentarios: 0, comentariosPrev: 0,
-    reacoes: 0, reacoesPrev: 0, ctr: 0, ctrPrev: 0,
-    seguidoresQualificados: 0, seguidoresQualificadosPrev: 0,
+    salvamentos: 0, salvamentosPrev: 0, dwellTime: 0, dwellTimePrev: 0,
+    novosSeguidores: 0, novosSeguidoresPrev: 0,
     compartilhamentos: 0, compartilhamentosPrev: 0, seguidores: 0,
   }
 
@@ -972,12 +974,12 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
         impressoesPrev: prev.impressions || 0,
         comentarios: m.comments || 0,
         comentariosPrev: prev.comments || 0,
-        reacoes: m.reactions || 0,
-        reacoesPrev: prev.reactions || 0,
-        ctr: m.ctr || 0,
-        ctrPrev: prev.ctr || 0,
-        seguidoresQualificados: m.new_followers || 0,
-        seguidoresQualificadosPrev: prev.new_followers || 0,
+        salvamentos: m.saves || 0,
+        salvamentosPrev: prev.saves || 0,
+        dwellTime: m.dwell_time || 0,
+        dwellTimePrev: prev.dwell_time || 0,
+        novosSeguidores: m.new_followers || 0,
+        novosSeguidoresPrev: prev.new_followers || 0,
         compartilhamentos: m.shares || 0,
         compartilhamentosPrev: prev.shares || 0,
         seguidores: m.followers || 0,
@@ -994,12 +996,12 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
       impressoesPrev: sum(previous, 'impressoes'),
       comentarios: sum(current, 'comentarios'),
       comentariosPrev: sum(previous, 'comentarios'),
-      reacoes: sum(current, 'reacoes'),
-      reacoesPrev: sum(previous, 'reacoes'),
-      ctr: avg(current, 'ctr'),
-      ctrPrev: avg(previous, 'ctr'),
-      seguidoresQualificados: sum(current, 'seguidoresQualificados'),
-      seguidoresQualificadosPrev: sum(previous, 'seguidoresQualificados'),
+      salvamentos: sum(current, 'salvamentos'),
+      salvamentosPrev: sum(previous, 'salvamentos'),
+      dwellTime: avg(current, 'dwellTime'),
+      dwellTimePrev: avg(previous, 'dwellTime'),
+      novosSeguidores: sum(current, 'novosSeguidores'),
+      novosSeguidoresPrev: sum(previous, 'novosSeguidores'),
       compartilhamentos: sum(current, 'compartilhamentos'),
       compartilhamentosPrev: sum(previous, 'compartilhamentos'),
       seguidores: current.length > 0 ? current[current.length - 1].seguidores : 0,
@@ -1015,10 +1017,14 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
   const impressoesCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.impressoes), [previous, compDays, isRealData])
   const comentariosData = useMemo(() => isRealData ? trendToChartData(trend?.comments, ranges.analise) : dailyData(current, totalDays, (m) => m.comentarios), [current, totalDays, isRealData, trend, ranges.analise])
   const comentariosCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.comentarios), [previous, compDays, isRealData])
-  const ctrData = useMemo(() => isRealData ? trendToChartData(trend?.ctr, ranges.analise) : dailyData(current, totalDays, (m) => m.ctr, 'avg'), [current, totalDays, isRealData, trend, ranges.analise])
-  const ctrCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.ctr, 'avg'), [previous, compDays, isRealData])
-  const segQualData = useMemo(() => isRealData ? trendToChartData(trend?.new_followers, ranges.analise) : dailyData(current, totalDays, (m) => m.seguidoresQualificados), [current, totalDays, isRealData, trend, ranges.analise])
-  const segQualCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.seguidoresQualificados), [previous, compDays, isRealData])
+  const dwellTimeData = useMemo(() => isRealData ? trendToChartData(trend?.dwell_time, ranges.analise) : dailyData(current, totalDays, (m) => m.dwellTime, 'avg'), [current, totalDays, isRealData, trend, ranges.analise])
+  const dwellTimeCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.dwellTime, 'avg'), [previous, compDays, isRealData])
+  const novosSegData = useMemo(() => isRealData ? trendToChartData(trend?.new_followers, ranges.analise) : dailyData(current, totalDays, (m) => m.novosSeguidores), [current, totalDays, isRealData, trend, ranges.analise])
+  const novosSegCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.novosSeguidores), [previous, compDays, isRealData])
+  const salvamentosData = useMemo(() => isRealData ? trendToChartData(trend?.saves, ranges.analise) : dailyData(current, totalDays, (m) => m.salvamentos), [current, totalDays, isRealData, trend, ranges.analise])
+  const salvamentosCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.salvamentos), [previous, compDays, isRealData])
+  const compartData = useMemo(() => isRealData ? trendToChartData(trend?.shares, ranges.analise) : dailyData(current, totalDays, (m) => m.compartilhamentos), [current, totalDays, isRealData, trend, ranges.analise])
+  const compartCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.compartilhamentos), [previous, compDays, isRealData])
 
   return (
     <div className="flex flex-col gap-6">
@@ -1037,7 +1043,6 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
           value={formatNumber(metrics.impressoes)}
           change={calcChange(metrics.impressoes, metrics.impressoesPrev)}
           tooltip="Vezes que seu conteúdo apareceu no feed. LinkedIn Analytics — mede o alcance orgânico da sua página."
-          isKey
         />
         <MetricCard
           label="Comentários"
@@ -1045,33 +1050,31 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
           value={formatNumber(metrics.comentarios)}
           change={calcChange(metrics.comentarios, metrics.comentariosPrev)}
           tooltip="Total de comentários nos posts. LinkedIn Analytics — comentários geram mais distribuição que reações."
-          isKey
         />
         <MetricCard
-          label="CTR"
-          sublabel="Interesse real"
-          value={formatPercent(metrics.ctr)}
-          change={calcChange(metrics.ctr, metrics.ctrPrev)}
-          tooltip="Taxa de cliques sobre impressões. LinkedIn Analytics — mostra quantas pessoas quiseram saber mais."
-          isKey
+          label="Dwell Time"
+          sublabel="Tempo de leitura"
+          value={`${metrics.dwellTime.toFixed(1)}s`}
+          change={calcChange(metrics.dwellTime, metrics.dwellTimePrev)}
+          tooltip="Tempo médio que os usuários passam visualizando seu conteúdo (em segundos). LinkedIn Analytics — quanto maior, mais relevante e envolvente é o post."
         />
         <MetricCard
-          label="Seguidores Qualif."
-          sublabel="Crescimento real"
-          value={formatNumber(metrics.seguidoresQualificados)}
-          change={calcChange(metrics.seguidoresQualificados, metrics.seguidoresQualificadosPrev)}
-          tooltip="Novos seguidores do setor de energia/indústria. LinkedIn Analytics — crescimento que gera oportunidades reais."
-          isKey
+          label="Novos Seguidores"
+          sublabel="Crescimento da base"
+          value={formatNumber(metrics.novosSeguidores)}
+          change={calcChange(metrics.novosSeguidores, metrics.novosSeguidoresPrev)}
+          tooltip="Novos seguidores conquistados no período. LinkedIn Analytics — mostra o crescimento real da sua audiência profissional."
         />
         <MetricCard
-          label="Reações"
-          sublabel="Engajamento leve"
-          value={formatNumber(metrics.reacoes)}
-          change={calcChange(metrics.reacoes, metrics.reacoesPrev)}
-          tooltip="Curtidas e reações (aplausos, apoio, etc). LinkedIn Analytics — engajamento rápido, menor peso que comentários."
+          label="Salvamentos"
+          sublabel="Conteúdo de referência"
+          value={formatNumber(metrics.salvamentos)}
+          change={calcChange(metrics.salvamentos, metrics.salvamentosPrev)}
+          tooltip="Vezes que seu conteúdo foi salvo para leitura posterior. LinkedIn Analytics — indica que o post é referência e será revisitado."
         />
         <MetricCard
           label="Compartilhamentos"
+          sublabel="Amplificação"
           value={formatNumber(metrics.compartilhamentos)}
           change={calcChange(metrics.compartilhamentos, metrics.compartilhamentosPrev)}
           tooltip="Repostagens do seu conteúdo. LinkedIn Analytics — amplifica alcance para a rede dos compartilhadores."
@@ -1090,11 +1093,17 @@ function LinkedInAnalytics({ ranges, isMounted, platformData, isRealData, realDa
           <ChartCard title="Comentários (Profundidade)" isMounted={isMounted}>
             <SimpleBarChart data={comentariosData} comparisonData={comentariosCompData} color={color} isMounted={isMounted} />
           </ChartCard>
-          <ChartCard title="CTR — Click-Through Rate (%)" isMounted={isMounted}>
-            <SimpleLineChart data={ctrData} comparisonData={ctrCompData} color={color} suffix="%" isMounted={isMounted} />
+          <ChartCard title="Dwell Time — Tempo de Leitura (s)" isMounted={isMounted}>
+            <SimpleLineChart data={dwellTimeData} comparisonData={dwellTimeCompData} color={color} suffix="s" isMounted={isMounted} />
           </ChartCard>
-          <ChartCard title="Seguidores Qualificados (Novos)" isMounted={isMounted}>
-            <SimpleBarChart data={segQualData} comparisonData={segQualCompData} color={color} isMounted={isMounted} />
+          <ChartCard title="Novos Seguidores (Crescimento)" isMounted={isMounted}>
+            <SimpleBarChart data={novosSegData} comparisonData={novosSegCompData} color={color} isMounted={isMounted} />
+          </ChartCard>
+          <ChartCard title="Salvamentos (Conteúdo de Referência)" isMounted={isMounted}>
+            <SimpleBarChart data={salvamentosData} comparisonData={salvamentosCompData} color={color} isMounted={isMounted} />
+          </ChartCard>
+          <ChartCard title="Compartilhamentos (Amplificação)" isMounted={isMounted}>
+            <SimpleBarChart data={compartData} comparisonData={compartCompData} color={color} isMounted={isMounted} />
           </ChartCard>
         </div>
       ) : null}
@@ -1119,8 +1128,8 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
 
   const zeroMetrics = {
     ctrThumbnail: 0, ctrThumbnailPrev: 0, retencaoMedia: 0, retencaoMediaPrev: 0,
-    watchTime: 0, watchTimePrev: 0, inscricoesPorVideo: 0, inscricoesPorVideoPrev: 0,
-    visualizacoes: 0, visualizacoesPrev: 0, inscritos: 0,
+    watchTime: 0, watchTimePrev: 0, engajamento: 0, engajamentoPrev: 0,
+    visualizacoes: 0, visualizacoesPrev: 0, novosInscritos: 0, novosInscritosPrev: 0,
   }
 
   const metrics = useMemo(() => {
@@ -1135,11 +1144,12 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
         retencaoMediaPrev: prev.retention || 0,
         watchTime: m.watch_time || 0,
         watchTimePrev: prev.watch_time || 0,
-        inscricoesPorVideo: m.new_followers || 0,
-        inscricoesPorVideoPrev: prev.new_followers || 0,
+        engajamento: m.engagement || 0,
+        engajamentoPrev: prev.engagement || 0,
         visualizacoes: m.impressions || 0,
         visualizacoesPrev: prev.impressions || 0,
-        inscritos: m.followers || 0,
+        novosInscritos: m.new_followers || 0,
+        novosInscritosPrev: prev.new_followers || 0,
       }
     }
 
@@ -1155,11 +1165,12 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
       retencaoMediaPrev: avg(previous, 'retencaoMedia'),
       watchTime: sum(current, 'watchTime'),
       watchTimePrev: sum(previous, 'watchTime'),
-      inscricoesPorVideo: avg(current, 'inscricoesPorVideo'),
-      inscricoesPorVideoPrev: avg(previous, 'inscricoesPorVideo'),
+      engajamento: avg(current, 'engajamento'),
+      engajamentoPrev: avg(previous, 'engajamento'),
       visualizacoes: sum(current, 'visualizacoes'),
       visualizacoesPrev: sum(previous, 'visualizacoes'),
-      inscritos: current.length > 0 ? current[current.length - 1].inscritos : 0,
+      novosInscritos: current.length > 1 ? current[current.length - 1].inscritos - current[0].inscritos : 0,
+      novosInscritosPrev: previous.length > 1 ? previous[previous.length - 1].inscritos - previous[0].inscritos : 0,
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, previous, platformData, isRealData])
@@ -1174,8 +1185,24 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
   const retencaoCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.retencaoMedia, 'avg'), [previous, compDays, isRealData])
   const ctrData = useMemo(() => isRealData ? trendToChartData(trend?.ctr, ranges.analise) : dailyData(current, totalDays, (m) => m.ctrThumbnail, 'avg'), [current, totalDays, isRealData, trend, ranges.analise])
   const ctrCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.ctrThumbnail, 'avg'), [previous, compDays, isRealData])
-  const inscricoesData = useMemo(() => isRealData ? trendToChartData(trend?.new_followers, ranges.analise) : dailyData(current, totalDays, (m) => m.inscricoesPorVideo, 'avg'), [current, totalDays, isRealData, trend, ranges.analise])
-  const inscricoesCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.inscricoesPorVideo, 'avg'), [previous, compDays, isRealData])
+  const engajamentoData = useMemo(() => isRealData ? trendToChartData(trend?.engagement, ranges.analise) : dailyData(current, totalDays, (m) => m.engajamento, 'avg'), [current, totalDays, isRealData, trend, ranges.analise])
+  const engajamentoCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.engajamento, 'avg'), [previous, compDays, isRealData])
+  const viewsData = useMemo(() => isRealData ? trendToChartData(trend?.impressions, ranges.analise) : dailyData(current, totalDays, (m) => m.visualizacoes), [current, totalDays, isRealData, trend, ranges.analise])
+  const viewsCompData = useMemo(() => isRealData ? emptyChart : dailyData(previous, compDays, (m) => m.visualizacoes), [previous, compDays, isRealData])
+  const novosInscritosData = useMemo(() => {
+    if (isRealData) return trendToChartData(trend?.new_followers, ranges.analise)
+    return current.map((m, i) => ({
+      label: m.data,
+      value: i > 0 ? Math.max(0, m.inscritos - current[i - 1].inscritos) : 0,
+    }))
+  }, [current, isRealData, trend, ranges.analise])
+  const novosInscritosCompData = useMemo(() => {
+    if (isRealData) return emptyChart
+    return previous.map((m, i) => ({
+      label: m.data,
+      value: i > 0 ? Math.max(0, m.inscritos - previous[i - 1].inscritos) : 0,
+    }))
+  }, [previous, isRealData])
 
   return (
     <div className="flex flex-col gap-6">
@@ -1194,7 +1221,6 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
           value={`${formatNumber(metrics.watchTime)}h`}
           change={calcChange(metrics.watchTime, metrics.watchTimePrev)}
           tooltip="Horas totais assistidas no período. YouTube Studio — é o fator #1 de recomendação do algoritmo."
-          isKey
         />
         <MetricCard
           label="Retenção Média"
@@ -1202,7 +1228,6 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
           value={formatPercent(metrics.retencaoMedia)}
           change={calcChange(metrics.retencaoMedia, metrics.retencaoMediaPrev)}
           tooltip="% médio do vídeo assistido. YouTube Studio — acima de 50% indica conteúdo que prende a audiência."
-          isKey
         />
         <MetricCard
           label="CTR Thumbnail"
@@ -1210,15 +1235,13 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
           value={formatPercent(metrics.ctrThumbnail)}
           change={calcChange(metrics.ctrThumbnail, metrics.ctrThumbnailPrev)}
           tooltip="Taxa de cliques na thumbnail sobre impressões. YouTube Studio — acima de 5% é bom; mede o poder da capa."
-          isKey
         />
         <MetricCard
-          label="Inscrições/Vídeo"
-          sublabel="Conversão"
-          value={metrics.inscricoesPorVideo.toFixed(1)}
-          change={calcChange(metrics.inscricoesPorVideo, metrics.inscricoesPorVideoPrev)}
-          tooltip="Média de novos inscritos gerados por vídeo. YouTube Studio — mede o poder de conversão do conteúdo."
-          isKey
+          label="Engajamento"
+          sublabel="Interação total"
+          value={formatPercent(metrics.engajamento)}
+          change={calcChange(metrics.engajamento, metrics.engajamentoPrev)}
+          tooltip="Taxa de engajamento (curtidas + comentários / visualizações). YouTube Studio — mede o quanto a audiência interage com o conteúdo."
         />
         <MetricCard
           label="Visualizações"
@@ -1228,9 +1251,11 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
           tooltip="Total de views no período. YouTube Studio — métrica de vaidade; o YouTube prioriza watch time sobre views."
         />
         <MetricCard
-          label="Inscritos"
-          value={formatNumber(metrics.inscritos)}
-          tooltip="Total de inscritos do canal. YouTube Studio — crescimento geral da base de audiência."
+          label="Novos Inscritos"
+          sublabel="Crescimento do canal"
+          value={formatNumber(metrics.novosInscritos)}
+          change={calcChange(metrics.novosInscritos, metrics.novosInscritosPrev)}
+          tooltip="Novos inscritos conquistados no período. YouTube Studio — mede o crescimento real da base de audiência."
         />
       </div>
 
@@ -1249,8 +1274,14 @@ function YouTubeAnalytics({ ranges, isMounted, platformData, isRealData, realDat
           <ChartCard title="CTR de Thumbnail (%)" isMounted={isMounted}>
             <SimpleLineChart data={ctrData} comparisonData={ctrCompData} color={color} suffix="%" isMounted={isMounted} />
           </ChartCard>
-          <ChartCard title="Inscrições por Vídeo" isMounted={isMounted}>
-            <SimpleBarChart data={inscricoesData} comparisonData={inscricoesCompData} color={color} isMounted={isMounted} />
+          <ChartCard title="Engajamento (%)" isMounted={isMounted}>
+            <SimpleLineChart data={engajamentoData} comparisonData={engajamentoCompData} color={color} suffix="%" isMounted={isMounted} />
+          </ChartCard>
+          <ChartCard title="Visualizações" isMounted={isMounted}>
+            <SimpleBarChart data={viewsData} comparisonData={viewsCompData} color={color} isMounted={isMounted} />
+          </ChartCard>
+          <ChartCard title="Novos Inscritos (Crescimento)" isMounted={isMounted}>
+            <SimpleBarChart data={novosInscritosData} comparisonData={novosInscritosCompData} color={color} isMounted={isMounted} />
           </ChartCard>
         </div>
       ) : null}
@@ -1281,18 +1312,22 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
         alcance: m.reach || 0, alcancePrev: p.reach || 0,
         salvamentos: m.saves || 0, salvamentosPrev: p.saves || 0,
         compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
-        retencaoReels: m.reels_engagement_rate || m.interaction_rate || 0,
-        retencaoReelsPrev: p.reels_engagement_rate || p.interaction_rate || 0,
+        watchTime: m.watch_time || m.reels_watch_time || 0,
+        watchTimePrev: p.watch_time || p.reels_watch_time || 0,
+        cliquesLink: m.clicks || 0, cliquesLinkPrev: p.clicks || 0,
+        interacoesDirect: m.direct_interactions || m.story_replies || 0,
+        interacoesDirectPrev: p.direct_interactions || p.story_replies || 0,
       }
     }
     const c = igData.current, pv = igData.previous
     const sum = (arr: typeof c, k: keyof typeof c[0]) => arr.reduce((s, m) => s + (m[k] as number), 0)
-    const avg = (arr: typeof c, k: keyof typeof c[0]) => arr.length > 0 ? sum(arr, k) / arr.length : 0
     return {
       alcance: sum(c, 'alcance'), alcancePrev: sum(pv, 'alcance'),
       salvamentos: sum(c, 'salvamentos'), salvamentosPrev: sum(pv, 'salvamentos'),
       compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
-      retencaoReels: avg(c, 'retencaoReels'), retencaoReelsPrev: avg(pv, 'retencaoReels'),
+      watchTime: sum(c, 'watchTime'), watchTimePrev: sum(pv, 'watchTime'),
+      cliquesLink: sum(c, 'cliquesLink'), cliquesLinkPrev: sum(pv, 'cliquesLink'),
+      interacoesDirect: sum(c, 'interacoesDirect'), interacoesDirectPrev: sum(pv, 'interacoesDirect'),
     }
   }, [igData, hasReal, igReal])
 
@@ -1304,8 +1339,10 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
       return {
         impressoes: m.impressions || 0, impressoesPrev: p.impressions || 0,
         comentarios: m.comments || 0, comentariosPrev: p.comments || 0,
-        ctr: m.ctr || 0, ctrPrev: p.ctr || 0,
-        segQual: m.new_followers || 0, segQualPrev: p.new_followers || 0,
+        dwellTime: m.dwell_time || 0, dwellTimePrev: p.dwell_time || 0,
+        novosSeg: m.new_followers || 0, novosSegPrev: p.new_followers || 0,
+        salvamentos: m.saves || 0, salvamentosPrev: p.saves || 0,
+        compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
       }
     }
     const c = liData.current, pv = liData.previous
@@ -1314,8 +1351,10 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
     return {
       impressoes: sum(c, 'impressoes'), impressoesPrev: sum(pv, 'impressoes'),
       comentarios: sum(c, 'comentarios'), comentariosPrev: sum(pv, 'comentarios'),
-      ctr: avg(c, 'ctr'), ctrPrev: avg(pv, 'ctr'),
-      segQual: sum(c, 'seguidoresQualificados'), segQualPrev: sum(pv, 'seguidoresQualificados'),
+      dwellTime: avg(c, 'dwellTime'), dwellTimePrev: avg(pv, 'dwellTime'),
+      novosSeg: sum(c, 'novosSeguidores'), novosSegPrev: sum(pv, 'novosSeguidores'),
+      salvamentos: sum(c, 'salvamentos'), salvamentosPrev: sum(pv, 'salvamentos'),
+      compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
     }
   }, [liData, hasReal, liReal])
 
@@ -1328,7 +1367,9 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
         watchTime: m.watch_time || 0, watchTimePrev: p.watch_time || 0,
         retencao: m.retention || 0, retencaoPrev: p.retention || 0,
         ctrThumb: m.ctr || 0, ctrThumbPrev: p.ctr || 0,
-        inscricoes: m.new_followers || 0, inscricoesPrev: p.new_followers || 0,
+        engajamento: m.engagement || 0, engajamentoPrev: p.engagement || 0,
+        visualizacoes: m.impressions || 0, visualizacoesPrev: p.impressions || 0,
+        novosInscritos: m.new_followers || 0, novosInscritosPrev: p.new_followers || 0,
       }
     }
     const c = ytData.current, pv = ytData.previous
@@ -1338,7 +1379,10 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
       watchTime: sum(c, 'watchTime'), watchTimePrev: sum(pv, 'watchTime'),
       retencao: avg(c, 'retencaoMedia'), retencaoPrev: avg(pv, 'retencaoMedia'),
       ctrThumb: avg(c, 'ctrThumbnail'), ctrThumbPrev: avg(pv, 'ctrThumbnail'),
-      inscricoes: avg(c, 'inscricoesPorVideo'), inscricoesPrev: avg(pv, 'inscricoesPorVideo'),
+      engajamento: avg(c, 'engajamento'), engajamentoPrev: avg(pv, 'engajamento'),
+      visualizacoes: sum(c, 'visualizacoes'), visualizacoesPrev: sum(pv, 'visualizacoes'),
+      novosInscritos: c.length > 1 ? c[c.length - 1].inscritos - c[0].inscritos : 0,
+      novosInscritosPrev: pv.length > 1 ? pv[pv.length - 1].inscritos - pv[0].inscritos : 0,
     }
   }, [ytData, hasReal, ytReal])
 
@@ -1347,7 +1391,7 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
       <div>
         <h2 className="text-lg font-semibold">Comparativo — KPIs por Plataforma</h2>
         <p className="text-xs text-muted-foreground">
-          Os 4 KPIs principais de cada rede, com período de análise vs comparação
+          Todas as métricas de cada rede, com período de análise vs comparação
         </p>
       </div>
 
@@ -1376,11 +1420,13 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
                 { label: 'Alcance', cur: ig.alcance, prev: ig.alcancePrev, fmt: 'number' as const },
                 { label: 'Salvamentos', cur: ig.salvamentos, prev: ig.salvamentosPrev, fmt: 'number' as const },
                 { label: 'Compartilhamentos', cur: ig.compartilhamentos, prev: ig.compartilhamentosPrev, fmt: 'number' as const },
-                { label: 'Retenção Reels', cur: ig.retencaoReels, prev: ig.retencaoReelsPrev, fmt: 'percent' as const },
-              ]).map((row) => {
+                { label: 'Watch Time', cur: ig.watchTime, prev: ig.watchTimePrev, fmt: 'hours' as const },
+                { label: 'Cliques no Link', cur: ig.cliquesLink, prev: ig.cliquesLinkPrev, fmt: 'number' as const },
+                { label: 'Interações no Direct', cur: ig.interacoesDirect, prev: ig.interacoesDirectPrev, fmt: 'number' as const },
+              ] as { label: string; cur: number; prev: number; fmt: 'number' | 'percent' | 'hours' | 'seconds' }[]).map((row) => {
                 const change = calcChange(row.cur, row.prev)
-                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : formatNumber(row.cur)
-                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : formatNumber(row.prev)
+                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : row.fmt === 'hours' ? `${formatNumber(row.cur)}h` : row.fmt === 'seconds' ? `${row.cur.toFixed(1)}s` : formatNumber(row.cur)
+                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : row.fmt === 'hours' ? `${formatNumber(row.prev)}h` : row.fmt === 'seconds' ? `${row.prev.toFixed(1)}s` : formatNumber(row.prev)
                 return (
                   <TableRow key={row.label}>
                     <TableCell className="font-medium">{row.label}</TableCell>
@@ -1422,12 +1468,14 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
               {([
                 { label: 'Impressões', cur: li.impressoes, prev: li.impressoesPrev, fmt: 'number' as const },
                 { label: 'Comentários', cur: li.comentarios, prev: li.comentariosPrev, fmt: 'number' as const },
-                { label: 'CTR', cur: li.ctr, prev: li.ctrPrev, fmt: 'percent' as const },
-                { label: 'Seguidores Qualificados', cur: li.segQual, prev: li.segQualPrev, fmt: 'number' as const },
-              ]).map((row) => {
+                { label: 'Dwell Time', cur: li.dwellTime, prev: li.dwellTimePrev, fmt: 'seconds' as const },
+                { label: 'Novos Seguidores', cur: li.novosSeg, prev: li.novosSegPrev, fmt: 'number' as const },
+                { label: 'Salvamentos', cur: li.salvamentos, prev: li.salvamentosPrev, fmt: 'number' as const },
+                { label: 'Compartilhamentos', cur: li.compartilhamentos, prev: li.compartilhamentosPrev, fmt: 'number' as const },
+              ] as { label: string; cur: number; prev: number; fmt: 'number' | 'percent' | 'hours' | 'seconds' }[]).map((row) => {
                 const change = calcChange(row.cur, row.prev)
-                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : formatNumber(row.cur)
-                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : formatNumber(row.prev)
+                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : row.fmt === 'hours' ? `${formatNumber(row.cur)}h` : row.fmt === 'seconds' ? `${row.cur.toFixed(1)}s` : formatNumber(row.cur)
+                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : row.fmt === 'hours' ? `${formatNumber(row.prev)}h` : row.fmt === 'seconds' ? `${row.prev.toFixed(1)}s` : formatNumber(row.prev)
                 return (
                   <TableRow key={row.label}>
                     <TableCell className="font-medium">{row.label}</TableCell>
@@ -1470,11 +1518,13 @@ function ComparativoAnalytics({ ranges, isMounted, allPlatformData }: { ranges: 
                 { label: 'Watch Time', cur: yt.watchTime, prev: yt.watchTimePrev, fmt: 'hours' as const },
                 { label: 'Retenção Média', cur: yt.retencao, prev: yt.retencaoPrev, fmt: 'percent' as const },
                 { label: 'CTR Thumbnail', cur: yt.ctrThumb, prev: yt.ctrThumbPrev, fmt: 'percent' as const },
-                { label: 'Inscrições/Vídeo', cur: yt.inscricoes, prev: yt.inscricoesPrev, fmt: 'number' as const },
-              ]).map((row) => {
+                { label: 'Engajamento', cur: yt.engajamento, prev: yt.engajamentoPrev, fmt: 'percent' as const },
+                { label: 'Visualizações', cur: yt.visualizacoes, prev: yt.visualizacoesPrev, fmt: 'number' as const },
+                { label: 'Novos Inscritos', cur: yt.novosInscritos, prev: yt.novosInscritosPrev, fmt: 'number' as const },
+              ] as { label: string; cur: number; prev: number; fmt: 'number' | 'percent' | 'hours' | 'seconds' }[]).map((row) => {
                 const change = calcChange(row.cur, row.prev)
-                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : row.fmt === 'hours' ? `${formatNumber(row.cur)}h` : formatNumber(row.cur)
-                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : row.fmt === 'hours' ? `${formatNumber(row.prev)}h` : formatNumber(row.prev)
+                const fmtVal = row.fmt === 'percent' ? formatPercent(row.cur) : row.fmt === 'hours' ? `${formatNumber(row.cur)}h` : row.fmt === 'seconds' ? `${row.cur.toFixed(1)}s` : formatNumber(row.cur)
+                const fmtPrev = row.fmt === 'percent' ? formatPercent(row.prev) : row.fmt === 'hours' ? `${formatNumber(row.prev)}h` : row.fmt === 'seconds' ? `${row.prev.toFixed(1)}s` : formatNumber(row.prev)
                 return (
                   <TableRow key={row.label}>
                     <TableCell className="font-medium">{row.label}</TableCell>
@@ -1913,9 +1963,9 @@ export default function AnalyticsPage() {
         alcance: m.reach || 0, alcancePrev: p.reach || 0,
         salvamentos: m.saves || 0, salvamentosPrev: p.saves || 0,
         compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
-        retencaoReels: m.reels_engagement_rate || m.interaction_rate || 0, retencaoReelsPrev: p.reels_engagement_rate || p.interaction_rate || 0,
+        watchTime: m.watch_time || m.reels_watch_time || 0, watchTimePrev: p.watch_time || p.reels_watch_time || 0,
         cliquesLink: m.clicks || 0, cliquesLinkPrev: p.clicks || 0,
-        curtidas: m.likes || 0, curtidasPrev: p.likes || 0,
+        interacoesDirect: m.direct_interactions || m.story_replies || 0, interacoesDirectPrev: p.direct_interactions || p.story_replies || 0,
         seguidores: m.followers || 0,
       }
     }
@@ -1926,9 +1976,9 @@ export default function AnalyticsPage() {
       alcance: sum(c, 'alcance'), alcancePrev: sum(pv, 'alcance'),
       salvamentos: sum(c, 'salvamentos'), salvamentosPrev: sum(pv, 'salvamentos'),
       compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
-      retencaoReels: avg(c, 'retencaoReels'), retencaoReelsPrev: avg(pv, 'retencaoReels'),
+      watchTime: sum(c, 'watchTime'), watchTimePrev: sum(pv, 'watchTime'),
       cliquesLink: sum(c, 'cliquesLink'), cliquesLinkPrev: sum(pv, 'cliquesLink'),
-      curtidas: sum(c, 'curtidas'), curtidasPrev: sum(pv, 'curtidas'),
+      interacoesDirect: sum(c, 'interacoesDirect'), interacoesDirectPrev: sum(pv, 'interacoesDirect'),
       seguidores: c.length > 0 ? c[c.length - 1].seguidores : 0,
     }
   }, [igMockFiltered, isReportei, igPlatformData])
@@ -1939,9 +1989,9 @@ export default function AnalyticsPage() {
       return {
         impressoes: m.impressions || 0, impressoesPrev: p.impressions || 0,
         comentarios: m.comments || 0, comentariosPrev: p.comments || 0,
-        reacoes: m.reactions || 0, reacoesPrev: p.reactions || 0,
-        ctr: m.ctr || 0, ctrPrev: p.ctr || 0,
-        seguidoresQualificados: m.new_followers || 0, seguidoresQualificadosPrev: p.new_followers || 0,
+        salvamentos: m.saves || 0, salvamentosPrev: p.saves || 0,
+        dwellTime: m.dwell_time || 0, dwellTimePrev: p.dwell_time || 0,
+        novosSeguidores: m.new_followers || 0, novosSeguidoresPrev: p.new_followers || 0,
         compartilhamentos: m.shares || 0, compartilhamentosPrev: p.shares || 0,
         seguidores: m.followers || 0,
       }
@@ -1952,9 +2002,9 @@ export default function AnalyticsPage() {
     return {
       impressoes: sum(c, 'impressoes'), impressoesPrev: sum(pv, 'impressoes'),
       comentarios: sum(c, 'comentarios'), comentariosPrev: sum(pv, 'comentarios'),
-      reacoes: sum(c, 'reacoes'), reacoesPrev: sum(pv, 'reacoes'),
-      ctr: avg(c, 'ctr'), ctrPrev: avg(pv, 'ctr'),
-      seguidoresQualificados: sum(c, 'seguidoresQualificados'), seguidoresQualificadosPrev: sum(pv, 'seguidoresQualificados'),
+      salvamentos: sum(c, 'salvamentos'), salvamentosPrev: sum(pv, 'salvamentos'),
+      dwellTime: avg(c, 'dwellTime'), dwellTimePrev: avg(pv, 'dwellTime'),
+      novosSeguidores: sum(c, 'novosSeguidores'), novosSeguidoresPrev: sum(pv, 'novosSeguidores'),
       compartilhamentos: sum(c, 'compartilhamentos'), compartilhamentosPrev: sum(pv, 'compartilhamentos'),
       seguidores: c.length > 0 ? c[c.length - 1].seguidores : 0,
     }
@@ -1967,9 +2017,9 @@ export default function AnalyticsPage() {
         ctrThumbnail: m.ctr || 0, ctrThumbnailPrev: p.ctr || 0,
         retencaoMedia: m.retention || 0, retencaoMediaPrev: p.retention || 0,
         watchTime: m.watch_time || 0, watchTimePrev: p.watch_time || 0,
-        inscricoesPorVideo: m.new_followers || 0, inscricoesPorVideoPrev: p.new_followers || 0,
+        engajamento: m.engagement || 0, engajamentoPrev: p.engagement || 0,
         visualizacoes: m.impressions || 0, visualizacoesPrev: p.impressions || 0,
-        inscritos: m.followers || 0,
+        novosInscritos: m.new_followers || 0, novosInscritosPrev: p.new_followers || 0,
       }
     }
     const c = ytMockFiltered.current, pv = ytMockFiltered.previous
@@ -1979,9 +2029,10 @@ export default function AnalyticsPage() {
       ctrThumbnail: avg(c, 'ctrThumbnail'), ctrThumbnailPrev: avg(pv, 'ctrThumbnail'),
       retencaoMedia: avg(c, 'retencaoMedia'), retencaoMediaPrev: avg(pv, 'retencaoMedia'),
       watchTime: sum(c, 'watchTime'), watchTimePrev: sum(pv, 'watchTime'),
-      inscricoesPorVideo: avg(c, 'inscricoesPorVideo'), inscricoesPorVideoPrev: avg(pv, 'inscricoesPorVideo'),
+      engajamento: avg(c, 'engajamento'), engajamentoPrev: avg(pv, 'engajamento'),
       visualizacoes: sum(c, 'visualizacoes'), visualizacoesPrev: sum(pv, 'visualizacoes'),
-      inscritos: c.length > 0 ? c[c.length - 1].inscritos : 0,
+      novosInscritos: c.length > 1 ? c[c.length - 1].inscritos - c[0].inscritos : 0,
+      novosInscritosPrev: pv.length > 1 ? pv[pv.length - 1].inscritos - pv[0].inscritos : 0,
     }
   }, [ytMockFiltered, isReportei, ytPlatformData])
 
@@ -1990,19 +2041,19 @@ export default function AnalyticsPage() {
       alcance: pdfInstagram.alcance, alcancePrev: pdfInstagram.alcancePrev,
       salvamentos: pdfInstagram.salvamentos, salvamentosPrev: pdfInstagram.salvamentosPrev,
       compartilhamentos: pdfInstagram.compartilhamentos, compartilhamentosPrev: pdfInstagram.compartilhamentosPrev,
-      retencaoReels: pdfInstagram.retencaoReels, retencaoReelsPrev: pdfInstagram.retencaoReelsPrev,
+      watchTime: pdfInstagram.watchTime, watchTimePrev: pdfInstagram.watchTimePrev,
     },
     li: {
       impressoes: pdfLinkedin.impressoes, impressoesPrev: pdfLinkedin.impressoesPrev,
       comentarios: pdfLinkedin.comentarios, comentariosPrev: pdfLinkedin.comentariosPrev,
-      ctr: pdfLinkedin.ctr, ctrPrev: pdfLinkedin.ctrPrev,
-      segQual: pdfLinkedin.seguidoresQualificados, segQualPrev: pdfLinkedin.seguidoresQualificadosPrev,
+      dwellTime: pdfLinkedin.dwellTime, dwellTimePrev: pdfLinkedin.dwellTimePrev,
+      novosSeg: pdfLinkedin.novosSeguidores, novosSegPrev: pdfLinkedin.novosSeguidoresPrev,
     },
     yt: {
       watchTime: pdfYoutube.watchTime, watchTimePrev: pdfYoutube.watchTimePrev,
       retencao: pdfYoutube.retencaoMedia, retencaoPrev: pdfYoutube.retencaoMediaPrev,
       ctrThumb: pdfYoutube.ctrThumbnail, ctrThumbPrev: pdfYoutube.ctrThumbnailPrev,
-      inscricoes: pdfYoutube.inscricoesPorVideo, inscricoesPrev: pdfYoutube.inscricoesPorVideoPrev,
+      engajamento: pdfYoutube.engajamento, engajamentoPrev: pdfYoutube.engajamentoPrev,
     },
   }), [pdfInstagram, pdfLinkedin, pdfYoutube])
 
@@ -2025,20 +2076,25 @@ export default function AnalyticsPage() {
       instagram: [
         { title: 'Alcance (Distribuição)', data: isReportei ? trendToChartData(igTrend?.reach, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.alcance), color: IG, type: 'line' as const },
         { title: 'Salvamentos (Qualidade)', data: isReportei ? trendToChartData(igTrend?.saves, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.salvamentos), color: IG, type: 'bar' as const },
-        { title: 'Retenção de Reels (%)', data: isReportei ? trendToChartData(igTrend?.reels_engagement_rate || igTrend?.interaction_rate, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.retencaoReels, 'avg'), color: IG, type: 'line' as const, suffix: '%' },
+        { title: 'Compartilhamentos (Conteúdo forte)', data: isReportei ? trendToChartData(igTrend?.shares, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.compartilhamentos), color: IG, type: 'bar' as const },
+        { title: 'Watch Time (horas)', data: isReportei ? trendToChartData(igTrend?.watch_time || igTrend?.reels_watch_time, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.watchTime), color: IG, type: 'bar' as const, suffix: 'h' },
         { title: 'Cliques no Link (Intenção)', data: isReportei ? trendToChartData(igTrend?.clicks, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.cliquesLink), color: IG, type: 'bar' as const },
+        { title: 'Interações no Direct (Conexão)', data: isReportei ? trendToChartData(igTrend?.direct_interactions || igTrend?.story_replies, ranges.analise) : dailyData(igCurrent, totalDaysPdf, (m) => m.interacoesDirect), color: IG, type: 'bar' as const },
       ],
       linkedin: [
         { title: 'Impressões (Distribuição)', data: isReportei ? trendToChartData(liTrend?.impressions, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.impressoes), color: LI, type: 'line' as const },
         { title: 'Comentários (Profundidade)', data: isReportei ? trendToChartData(liTrend?.comments, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.comentarios), color: LI, type: 'bar' as const },
-        { title: 'CTR (%)', data: isReportei ? trendToChartData(liTrend?.ctr, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.ctr, 'avg'), color: LI, type: 'line' as const, suffix: '%' },
-        { title: 'Seguidores Qualificados', data: isReportei ? trendToChartData(liTrend?.new_followers, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.seguidoresQualificados), color: LI, type: 'bar' as const },
+        { title: 'Dwell Time (s)', data: isReportei ? trendToChartData(liTrend?.dwell_time, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.dwellTime, 'avg'), color: LI, type: 'line' as const, suffix: 's' },
+        { title: 'Novos Seguidores', data: isReportei ? trendToChartData(liTrend?.new_followers, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.novosSeguidores), color: LI, type: 'bar' as const },
+        { title: 'Salvamentos (Referência)', data: isReportei ? trendToChartData(liTrend?.saves, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.salvamentos), color: LI, type: 'bar' as const },
+        { title: 'Compartilhamentos (Amplificação)', data: isReportei ? trendToChartData(liTrend?.shares, ranges.analise) : dailyData(liCurrent, totalDaysPdf, (m) => m.compartilhamentos), color: LI, type: 'bar' as const },
       ],
       youtube: [
         { title: 'Watch Time (horas)', data: isReportei ? trendToChartData(ytTrend?.watch_time, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.watchTime), color: YT, type: 'bar' as const, suffix: 'h' },
         { title: 'Retenção Média (%)', data: isReportei ? trendToChartData(ytTrend?.retention, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.retencaoMedia, 'avg'), color: YT, type: 'line' as const, suffix: '%' },
         { title: 'CTR Thumbnail (%)', data: isReportei ? trendToChartData(ytTrend?.ctr, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.ctrThumbnail, 'avg'), color: YT, type: 'line' as const, suffix: '%' },
-        { title: 'Inscrições por Vídeo', data: isReportei ? trendToChartData(ytTrend?.new_followers, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.inscricoesPorVideo, 'avg'), color: YT, type: 'bar' as const },
+        { title: 'Engajamento (%)', data: isReportei ? trendToChartData(ytTrend?.engagement, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.engajamento, 'avg'), color: YT, type: 'line' as const, suffix: '%' },
+        { title: 'Visualizações', data: isReportei ? trendToChartData(ytTrend?.impressions, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.visualizacoes), color: YT, type: 'bar' as const },
       ],
     }
   }, [igMockFiltered, liMockFiltered, ytMockFiltered, isReportei, igTrend, liTrend, ytTrend, ranges, totalDaysPdf])

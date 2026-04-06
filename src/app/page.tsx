@@ -42,9 +42,10 @@ function PlatformBadge({ platform }: { platform: Post['plataforma'] }) {
 function StatusBadge({ status }: { status: Post['status'] }) {
   const colorMap: Record<Post['status'], string> = {
     backlog: 'bg-zinc-500/20 text-zinc-400',
-    rascunho: 'bg-yellow-500/20 text-yellow-400',
+    aprovacao: 'bg-yellow-500/20 text-yellow-400',
+    aprovado: 'bg-emerald-500/20 text-emerald-400',
     agendado: 'bg-blue-500/20 text-blue-400',
-    publicado: 'bg-green-500/20 text-green-400',
+    postado: 'bg-green-500/20 text-green-400',
   }
   return (
     <span

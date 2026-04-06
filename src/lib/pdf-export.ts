@@ -77,9 +77,9 @@ function calcChange(current: number, previous: number): number {
   return ((current - previous) / previous) * 100
 }
 
-function makeKpiRow(label: string, cur: number, prev: number, fmt: 'number' | 'percent' | 'hours' = 'number'): KpiRow {
-  const fmtVal = fmt === 'percent' ? formatPercent(cur) : fmt === 'hours' ? `${formatNumber(cur)}h` : formatNumber(cur)
-  const fmtPrev = fmt === 'percent' ? formatPercent(prev) : fmt === 'hours' ? `${formatNumber(prev)}h` : formatNumber(prev)
+function makeKpiRow(label: string, cur: number, prev: number, fmt: 'number' | 'percent' | 'hours' | 'seconds' = 'number'): KpiRow {
+  const fmtVal = fmt === 'percent' ? formatPercent(cur) : fmt === 'hours' ? `${formatNumber(cur)}h` : fmt === 'seconds' ? `${cur.toFixed(1)}s` : formatNumber(cur)
+  const fmtPrev = fmt === 'percent' ? formatPercent(prev) : fmt === 'hours' ? `${formatNumber(prev)}h` : fmt === 'seconds' ? `${prev.toFixed(1)}s` : formatNumber(prev)
   return { label, current: fmtVal, previous: fmtPrev, change: formatChange(calcChange(cur, prev)) }
 }
 
@@ -222,17 +222,17 @@ export async function exportAnalyticsPDF({
     alcance: number; alcancePrev: number
     salvamentos: number; salvamentosPrev: number
     compartilhamentos: number; compartilhamentosPrev: number
-    retencaoReels: number; retencaoReelsPrev: number
+    watchTime: number; watchTimePrev: number
     cliquesLink: number; cliquesLinkPrev: number
-    curtidas: number; curtidasPrev: number
+    interacoesDirect: number; interacoesDirectPrev: number
     seguidores: number
   }
   linkedin: {
     impressoes: number; impressoesPrev: number
     comentarios: number; comentariosPrev: number
-    reacoes: number; reacoesPrev: number
-    ctr: number; ctrPrev: number
-    seguidoresQualificados: number; seguidoresQualificadosPrev: number
+    salvamentos: number; salvamentosPrev: number
+    dwellTime: number; dwellTimePrev: number
+    novosSeguidores: number; novosSeguidoresPrev: number
     compartilhamentos: number; compartilhamentosPrev: number
     seguidores: number
   }
@@ -240,14 +240,14 @@ export async function exportAnalyticsPDF({
     ctrThumbnail: number; ctrThumbnailPrev: number
     retencaoMedia: number; retencaoMediaPrev: number
     watchTime: number; watchTimePrev: number
-    inscricoesPorVideo: number; inscricoesPorVideoPrev: number
+    engajamento: number; engajamentoPrev: number
     visualizacoes: number; visualizacoesPrev: number
-    inscritos: number
+    novosInscritos: number; novosInscritosPrev: number
   }
   comparativo: {
-    ig: { alcance: number; alcancePrev: number; salvamentos: number; salvamentosPrev: number; compartilhamentos: number; compartilhamentosPrev: number; retencaoReels: number; retencaoReelsPrev: number }
-    li: { impressoes: number; impressoesPrev: number; comentarios: number; comentariosPrev: number; ctr: number; ctrPrev: number; segQual: number; segQualPrev: number }
-    yt: { watchTime: number; watchTimePrev: number; retencao: number; retencaoPrev: number; ctrThumb: number; ctrThumbPrev: number; inscricoes: number; inscricoesPrev: number }
+    ig: { alcance: number; alcancePrev: number; salvamentos: number; salvamentosPrev: number; compartilhamentos: number; compartilhamentosPrev: number; watchTime: number; watchTimePrev: number }
+    li: { impressoes: number; impressoesPrev: number; comentarios: number; comentariosPrev: number; dwellTime: number; dwellTimePrev: number; novosSeg: number; novosSegPrev: number }
+    yt: { watchTime: number; watchTimePrev: number; retencao: number; retencaoPrev: number; ctrThumb: number; ctrThumbPrev: number; engajamento: number; engajamentoPrev: number }
   }
   notes: PlatformNote[]
   chartData: {
@@ -516,9 +516,9 @@ export async function exportAnalyticsPDF({
     makeKpiRow('Alcance', instagram.alcance, instagram.alcancePrev),
     makeKpiRow('Salvamentos', instagram.salvamentos, instagram.salvamentosPrev),
     makeKpiRow('Compartilhamentos', instagram.compartilhamentos, instagram.compartilhamentosPrev),
-    makeKpiRow('Retenção Reels', instagram.retencaoReels, instagram.retencaoReelsPrev, 'percent'),
+    makeKpiRow('Watch Time', instagram.watchTime, instagram.watchTimePrev, 'hours'),
     makeKpiRow('Cliques no Link', instagram.cliquesLink, instagram.cliquesLinkPrev),
-    makeKpiRow('Curtidas', instagram.curtidas, instagram.curtidasPrev),
+    makeKpiRow('Interações no Direct', instagram.interacoesDirect, instagram.interacoesDirectPrev),
   ], IG_COLOR, y)
 
   doc.setTextColor(161, 161, 170)
@@ -538,9 +538,9 @@ export async function exportAnalyticsPDF({
   y = kpiTable([
     makeKpiRow('Impressões', linkedin.impressoes, linkedin.impressoesPrev),
     makeKpiRow('Comentários', linkedin.comentarios, linkedin.comentariosPrev),
-    makeKpiRow('CTR', linkedin.ctr, linkedin.ctrPrev, 'percent'),
-    makeKpiRow('Seguidores Qualificados', linkedin.seguidoresQualificados, linkedin.seguidoresQualificadosPrev),
-    makeKpiRow('Reações', linkedin.reacoes, linkedin.reacoesPrev),
+    makeKpiRow('Dwell Time', linkedin.dwellTime, linkedin.dwellTimePrev, 'seconds'),
+    makeKpiRow('Novos Seguidores', linkedin.novosSeguidores, linkedin.novosSeguidoresPrev),
+    makeKpiRow('Salvamentos', linkedin.salvamentos, linkedin.salvamentosPrev),
     makeKpiRow('Compartilhamentos', linkedin.compartilhamentos, linkedin.compartilhamentosPrev),
   ], LI_COLOR, y)
 
@@ -562,14 +562,10 @@ export async function exportAnalyticsPDF({
     makeKpiRow('Watch Time', youtube.watchTime, youtube.watchTimePrev, 'hours'),
     makeKpiRow('Retenção Média', youtube.retencaoMedia, youtube.retencaoMediaPrev, 'percent'),
     makeKpiRow('CTR Thumbnail', youtube.ctrThumbnail, youtube.ctrThumbnailPrev, 'percent'),
-    makeKpiRow('Inscrições/Vídeo', youtube.inscricoesPorVideo, youtube.inscricoesPorVideoPrev),
+    makeKpiRow('Engajamento', youtube.engajamento, youtube.engajamentoPrev, 'percent'),
     makeKpiRow('Visualizações', youtube.visualizacoes, youtube.visualizacoesPrev),
+    makeKpiRow('Novos Inscritos', youtube.novosInscritos, youtube.novosInscritosPrev),
   ], YT_COLOR, y)
-
-  doc.setTextColor(161, 161, 170)
-  doc.setFontSize(9)
-  doc.text(`Total de Inscritos: ${formatNumber(youtube.inscritos)}`, margin, y)
-  y += 8
 
   y = drawChartsGrid(chartData.youtube, y)
 
@@ -589,7 +585,7 @@ export async function exportAnalyticsPDF({
     makeKpiRow('Alcance', comparativo.ig.alcance, comparativo.ig.alcancePrev),
     makeKpiRow('Salvamentos', comparativo.ig.salvamentos, comparativo.ig.salvamentosPrev),
     makeKpiRow('Compartilhamentos', comparativo.ig.compartilhamentos, comparativo.ig.compartilhamentosPrev),
-    makeKpiRow('Retenção Reels', comparativo.ig.retencaoReels, comparativo.ig.retencaoReelsPrev, 'percent'),
+    makeKpiRow('Watch Time', comparativo.ig.watchTime, comparativo.ig.watchTimePrev, 'hours'),
   ], IG_COLOR, y)
 
   y = drawNotes('instagram', IG_COLOR, 'Instagram', y)
@@ -609,8 +605,8 @@ export async function exportAnalyticsPDF({
   y = kpiTable([
     makeKpiRow('Impressões', comparativo.li.impressoes, comparativo.li.impressoesPrev),
     makeKpiRow('Comentários', comparativo.li.comentarios, comparativo.li.comentariosPrev),
-    makeKpiRow('CTR', comparativo.li.ctr, comparativo.li.ctrPrev, 'percent'),
-    makeKpiRow('Seguidores Qualificados', comparativo.li.segQual, comparativo.li.segQualPrev),
+    makeKpiRow('Dwell Time', comparativo.li.dwellTime, comparativo.li.dwellTimePrev, 'seconds'),
+    makeKpiRow('Novos Seguidores', comparativo.li.novosSeg, comparativo.li.novosSegPrev),
   ], LI_COLOR, y)
 
   y = drawNotes('linkedin', LI_COLOR, 'LinkedIn', y)
@@ -631,7 +627,7 @@ export async function exportAnalyticsPDF({
     makeKpiRow('Watch Time', comparativo.yt.watchTime, comparativo.yt.watchTimePrev, 'hours'),
     makeKpiRow('Retenção Média', comparativo.yt.retencao, comparativo.yt.retencaoPrev, 'percent'),
     makeKpiRow('CTR Thumbnail', comparativo.yt.ctrThumb, comparativo.yt.ctrThumbPrev, 'percent'),
-    makeKpiRow('Inscrições/Vídeo', comparativo.yt.inscricoes, comparativo.yt.inscricoesPrev),
+    makeKpiRow('Engajamento', comparativo.yt.engajamento, comparativo.yt.engajamentoPrev, 'percent'),
   ], YT_COLOR, y)
 
   y = drawNotes('youtube', YT_COLOR, 'YouTube', y)

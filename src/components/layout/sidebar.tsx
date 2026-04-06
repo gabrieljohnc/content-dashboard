@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   ImageIcon,
   BarChart3,
+  FileBarChart,
   CalendarDays,
   Users,
   Newspaper,
@@ -19,6 +20,7 @@ const navItems = [
   { label: 'Home', href: '/', icon: LayoutDashboard },
   { label: 'Conteúdo', href: '/instagram', icon: ImageIcon },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Por Post', href: '/analytics/posts', icon: FileBarChart, indent: true },
   { label: 'Calendário', href: '/calendario', icon: CalendarDays },
   { label: 'Concorrentes', href: '/concorrentes', icon: Users },
   { label: 'Notícias', href: '/noticias', icon: Newspaper },
@@ -97,7 +99,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map(({ label, href, icon: Icon }) => {
+          {navItems.map(({ label, href, icon: Icon, indent }) => {
             const isActive = pathname === href
             return (
               <Link
@@ -105,14 +107,15 @@ export function Sidebar() {
                 href={href}
                 onClick={() => { if (isMobile) setOpen(false) }}
                 className={[
-                  'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-md text-sm font-medium transition-colors',
+                  indent ? 'pl-9 pr-3 py-1.5' : 'px-3 py-2',
                   isActive
-                    ? 'bg-zinc-800 text-white border-l-2 border-indigo-500 pl-[10px]'
+                    ? 'bg-zinc-800 text-white border-l-2 border-indigo-500' + (indent ? ' pl-[34px]' : ' pl-[10px]')
                     : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100',
                 ].join(' ')}
               >
-                <Icon size={18} strokeWidth={1.75} />
-                <span>{label}</span>
+                <Icon size={indent ? 15 : 18} strokeWidth={1.75} />
+                <span className={indent ? 'text-xs' : ''}>{label}</span>
               </Link>
             )
           })}
