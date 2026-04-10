@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/sync-metrics?project_id=1129832",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/noticias",
+      "schedule": "0 9,21 * * *"
     }
   ]
 }

@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Users,
   Newspaper,
+  LightbulbIcon,
   PanelLeftOpen,
   MenuIcon,
   XIcon,
@@ -24,10 +25,12 @@ const navItems = [
   { label: 'Calendário', href: '/calendario', icon: CalendarDays },
   { label: 'Concorrentes', href: '/concorrentes', icon: Users },
   { label: 'Notícias', href: '/noticias', icon: Newspaper },
+  { label: 'Ideias', href: '/ideias', icon: LightbulbIcon },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const isPublicRoute = pathname.startsWith('/ideias/formulario')
   const [open, setOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -47,6 +50,8 @@ export function Sidebar() {
   useEffect(() => {
     if (isMobile) setOpen(false)
   }, [pathname, isMobile])
+
+  if (isPublicRoute) return null
 
   return (
     <>

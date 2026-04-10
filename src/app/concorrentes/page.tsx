@@ -39,7 +39,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { mockCompetitors } from '@/lib/mock-data'
 import { PLATFORM_COLORS, PLATFORM_LABELS } from '@/lib/constants'
-import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useSupabaseState } from '@/hooks/use-supabase-state'
 import type { AnalysisNote, Competitor, Platform } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
@@ -753,7 +753,8 @@ function AnalysisNotesSection({
 }: {
   activePlatforms: Set<Platform>
 }) {
-  const [notes, setNotes] = useLocalStorage<AnalysisNote[]>(
+  const [notes, setNotes] = useSupabaseState<AnalysisNote[]>(
+    '/api/competitor-notes',
     'content-dashboard:analysis-notes',
     []
   )
@@ -769,11 +770,13 @@ function AnalysisNotesSection({
       criadoEm: new Date().toISOString(),
     }
     setNotes((prev) => [newNote, ...prev])
+    fetch('/api/competitor-notes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newNote) }).catch(() => {})
     setDraft('')
   }
 
   function handleDelete(id: string) {
     setNotes((prev) => prev.filter((n) => n.id !== id))
+    fetch('/api/competitor-notes', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
   }
 
   const visiblePlatforms = PLATFORMS.filter((p) => activePlatforms.has(p))
@@ -918,10 +921,18 @@ function AnalysisNotesSection({
 // ---------------------------------------------------------------------------
 
 export default function ConcorrentesPage() {
-  const [competitors, setCompetitors] = useLocalStorage<Competitor[]>(
-    'content-dashboard:competitors',
-    mockCompetitors
-  )
+  const [competitors, setCompetitors] = useState<Competitor[]>(() => {
+    if (typeof window === 'undefined') return mockCompetitors
+    try {
+      const raw = localStorage.getItem('content-dashboard:competitors')
+      return raw ? JSON.parse(raw) : mockCompetitors
+    } catch { return mockCompetitors }
+  })
+
+  // Persist competitors to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('content-dashboard:competitors', JSON.stringify(competitors))
+  }, [competitors])
   const [activePlatforms, setActivePlatforms] = useState<Set<Platform>>(
     new Set(PLATFORMS)
   )

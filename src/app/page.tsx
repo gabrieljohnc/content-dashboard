@@ -43,9 +43,12 @@ function StatusBadge({ status }: { status: Post['status'] }) {
   const colorMap: Record<Post['status'], string> = {
     backlog: 'bg-zinc-500/20 text-zinc-400',
     aprovacao: 'bg-yellow-500/20 text-yellow-400',
-    aprovado: 'bg-emerald-500/20 text-emerald-400',
+    producao: 'bg-orange-500/20 text-orange-400',
+    revisao: 'bg-purple-500/20 text-purple-400',
     agendado: 'bg-blue-500/20 text-blue-400',
     postado: 'bg-green-500/20 text-green-400',
+    analise: 'bg-cyan-500/20 text-cyan-400',
+    rejeitado: 'bg-red-500/20 text-red-400',
   }
   return (
     <span

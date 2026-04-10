@@ -208,6 +208,37 @@ function drawChart(doc: jsPDF, chart: ChartConfig, x: number, y: number, w: numb
 // PDF Generation
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Metric Explanations
+// ---------------------------------------------------------------------------
+
+const METRIC_EXPLANATIONS: Record<string, { metric: string; description: string }[]> = {
+  instagram: [
+    { metric: 'Alcance', description: 'Número de contas únicas que viram seu conteúdo. Indica o poder de distribuição do algoritmo.' },
+    { metric: 'Salvamentos', description: 'Quantas vezes o conteúdo foi salvo. Sinal forte de valor — o usuário quer revisitar.' },
+    { metric: 'Compartilhamentos', description: 'Quantas vezes o conteúdo foi compartilhado via DM ou Stories. Principal motor de alcance orgânico.' },
+    { metric: 'Watch Time', description: 'Tempo total de reprodução dos vídeos (Reels/Stories). Indica retenção de atenção e relevância.' },
+    { metric: 'Cliques no Link', description: 'Cliques em links da bio ou stickers. Mede conversão de atenção para ação.' },
+    { metric: 'Interações no Direct', description: 'Mensagens recebidas no Direct em resposta ao conteúdo. Indica conexão real com a audiência.' },
+  ],
+  linkedin: [
+    { metric: 'Impressões', description: 'Quantas vezes o conteúdo apareceu no feed. Mede a visibilidade e distribuição da rede.' },
+    { metric: 'Comentários', description: 'Número de comentários recebidos. No LinkedIn, comentário é o principal indicador de autoridade.' },
+    { metric: 'Dwell Time', description: 'Tempo médio que usuários permanecem no post. Indica profundidade de leitura e interesse.' },
+    { metric: 'Novos Seguidores', description: 'Seguidores conquistados no período. Mede crescimento de audiência qualificada.' },
+    { metric: 'Salvamentos', description: 'Posts salvos pelos usuários. Indica conteúdo de referência ou consulta futura.' },
+    { metric: 'Compartilhamentos', description: 'Reposts e compartilhamentos. Amplifica alcance para redes de segundo grau.' },
+  ],
+  youtube: [
+    { metric: 'Watch Time', description: 'Tempo total de exibição em horas. Métrica #1 do YouTube — determina recomendação algorítmica.' },
+    { metric: 'Retenção Média', description: 'Percentual médio do vídeo assistido. Acima de 50% é considerado bom.' },
+    { metric: 'CTR Thumbnail', description: 'Taxa de clique na miniatura. Mede a eficácia do título + thumbnail em gerar curiosidade.' },
+    { metric: 'Engajamento', description: 'Taxa de interação (likes + comentários / visualizações). Indica conexão com a audiência.' },
+    { metric: 'Visualizações', description: 'Total de views no período. Mede o volume de consumo do conteúdo.' },
+    { metric: 'Novos Inscritos', description: 'Inscritos conquistados no período. Indica conteúdo que converte visitantes em audiência recorrente.' },
+  ],
+}
+
 export async function exportAnalyticsPDF({
   ranges,
   instagram,
@@ -216,8 +247,12 @@ export async function exportAnalyticsPDF({
   comparativo,
   notes,
   chartData,
+  introducao,
+  conclusao,
 }: {
   ranges: DateRanges
+  introducao: string
+  conclusao: string
   instagram: {
     alcance: number; alcancePrev: number
     salvamentos: number; salvamentosPrev: number
@@ -323,6 +358,28 @@ export async function exportAnalyticsPDF({
     badgeX += 35
   }
 
+  // Introduction on cover page
+  if (introducao.trim()) {
+    y += 18
+    doc.setFillColor(52, 211, 153)
+    doc.rect(margin, y, 3, 10, 'F')
+    doc.setTextColor(52, 211, 153)
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Introdução', margin + 7, y + 7)
+    y += 16
+
+    doc.setTextColor(200, 200, 200)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    const introLines = doc.splitTextToSize(introducao, contentWidth)
+    for (const line of introLines) {
+      if (y + 4 > pageHeight - margin) break
+      doc.text(line, margin, y)
+      y += 4.5
+    }
+  }
+
   // =========================================================================
   // Helpers
   // =========================================================================
@@ -346,6 +403,61 @@ export async function exportAnalyticsPDF({
     doc.setFont('helvetica', 'normal')
     doc.text(subtitle, margin + 8, yPos + 13)
     return yPos + 22
+  }
+
+  function drawTextBlock(text: string, startY: number, fontSize = 10, textColor: [number, number, number] = [212, 212, 216]): number {
+    if (!text.trim()) return startY
+    doc.setTextColor(textColor[0], textColor[1], textColor[2])
+    doc.setFontSize(fontSize)
+    doc.setFont('helvetica', 'normal')
+    const lines = doc.splitTextToSize(text, contentWidth)
+    const lineHeight = fontSize * 0.45
+    let currentY = startY
+
+    for (const line of lines) {
+      if (currentY + lineHeight > pageHeight - margin) {
+        currentY = newPage()
+      }
+      doc.text(line, margin, currentY)
+      currentY += lineHeight
+    }
+
+    return currentY + 4
+  }
+
+  function kpiTableWithExplanations(rows: KpiRow[], platform: string, color: [number, number, number], yPos: number): number {
+    const explanations = METRIC_EXPLANATIONS[platform] || []
+    const explanationMap = new Map(explanations.map((e) => [e.metric, e.description]))
+
+    autoTable(doc, {
+      startY: yPos,
+      margin: { left: margin, right: margin },
+      head: [['Métrica', 'Atual', 'Anterior', 'Variação', 'O que mede']],
+      body: rows.map((r) => [r.label, r.current, r.previous, r.change, explanationMap.get(r.label) || '']),
+      styles: {
+        fillColor: [30, 30, 34],
+        textColor: [212, 212, 216],
+        fontSize: 8,
+        cellPadding: 3,
+        lineColor: [63, 63, 70],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [color[0], color[1], color[2]],
+        textColor: [255, 255, 255],
+        fontSize: 8,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: { fillColor: [39, 39, 42] },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 32 },
+        1: { halign: 'right', cellWidth: 22 },
+        2: { halign: 'right', cellWidth: 22 },
+        3: { halign: 'right', cellWidth: 20 },
+        4: { cellWidth: contentWidth - 96, textColor: [161, 161, 170], fontSize: 7 },
+      },
+    })
+    return (doc as any).lastAutoTable.finalY + 8
   }
 
   function kpiTable(rows: KpiRow[], color: [number, number, number], yPos: number): number {
@@ -382,14 +494,15 @@ export async function exportAnalyticsPDF({
   function drawChartsGrid(charts: ChartConfig[], startY: number): number {
     if (charts.length === 0) return startY
     const chartW = (contentWidth - 4) / 2
-    const chartH = 52
+    const chartH = 78
+    const gap = 4
     let currentY = startY
 
     for (let i = 0; i < charts.length; i++) {
       const col = i % 2
       const row = Math.floor(i / 2)
       const gx = margin + col * (chartW + 4)
-      const gy = currentY + row * (chartH + 4)
+      const gy = currentY + row * (chartH + gap)
 
       if (gy + chartH > pageHeight - margin) {
         currentY = newPage()
@@ -400,7 +513,7 @@ export async function exportAnalyticsPDF({
       drawChart(doc, charts[i], gx, gy, chartW, chartH)
     }
 
-    return currentY + Math.ceil(charts.length / 2) * (chartH + 4) + 4
+    return currentY + Math.ceil(charts.length / 2) * (chartH + gap) + 4
   }
 
   const FIELD_COLORS: Record<string, [number, number, number]> = {
@@ -506,67 +619,83 @@ export async function exportAnalyticsPDF({
   }
 
   // =========================================================================
-  // INSTAGRAM PAGE
+  // INSTAGRAM — Métricas
   // =========================================================================
 
   y = newPage()
   y = sectionHeader('Instagram', 'Atenção e Distribuição — Foco: parar o scroll + engajar rápido', IG_COLOR, y)
 
-  y = kpiTable([
+  y = kpiTableWithExplanations([
     makeKpiRow('Alcance', instagram.alcance, instagram.alcancePrev),
     makeKpiRow('Salvamentos', instagram.salvamentos, instagram.salvamentosPrev),
     makeKpiRow('Compartilhamentos', instagram.compartilhamentos, instagram.compartilhamentosPrev),
     makeKpiRow('Watch Time', instagram.watchTime, instagram.watchTimePrev, 'hours'),
     makeKpiRow('Cliques no Link', instagram.cliquesLink, instagram.cliquesLinkPrev),
     makeKpiRow('Interações no Direct', instagram.interacoesDirect, instagram.interacoesDirectPrev),
-  ], IG_COLOR, y)
+  ], 'instagram', IG_COLOR, y)
 
   doc.setTextColor(161, 161, 170)
   doc.setFontSize(9)
   doc.text(`Total de Seguidores: ${formatNumber(instagram.seguidores)}`, margin, y)
-  y += 8
 
+  // =========================================================================
+  // INSTAGRAM — Gráficos
+  // =========================================================================
+
+  y = newPage()
+  y = sectionHeader('Instagram', 'Evolução das Métricas', IG_COLOR, y)
   y = drawChartsGrid(chartData.instagram, y)
 
   // =========================================================================
-  // LINKEDIN PAGE
+  // LINKEDIN — Métricas
   // =========================================================================
 
   y = newPage()
   y = sectionHeader('LinkedIn', 'Autoridade e Conversão Leve — Foco: credibilidade + conversa', LI_COLOR, y)
 
-  y = kpiTable([
+  y = kpiTableWithExplanations([
     makeKpiRow('Impressões', linkedin.impressoes, linkedin.impressoesPrev),
     makeKpiRow('Comentários', linkedin.comentarios, linkedin.comentariosPrev),
     makeKpiRow('Dwell Time', linkedin.dwellTime, linkedin.dwellTimePrev, 'seconds'),
     makeKpiRow('Novos Seguidores', linkedin.novosSeguidores, linkedin.novosSeguidoresPrev),
     makeKpiRow('Salvamentos', linkedin.salvamentos, linkedin.salvamentosPrev),
     makeKpiRow('Compartilhamentos', linkedin.compartilhamentos, linkedin.compartilhamentosPrev),
-  ], LI_COLOR, y)
+  ], 'linkedin', LI_COLOR, y)
 
   doc.setTextColor(161, 161, 170)
   doc.setFontSize(9)
   doc.text(`Total de Seguidores: ${formatNumber(linkedin.seguidores)}`, margin, y)
-  y += 8
 
+  // =========================================================================
+  // LINKEDIN — Gráficos
+  // =========================================================================
+
+  y = newPage()
+  y = sectionHeader('LinkedIn', 'Evolução das Métricas', LI_COLOR, y)
   y = drawChartsGrid(chartData.linkedin, y)
 
   // =========================================================================
-  // YOUTUBE PAGE
+  // YOUTUBE — Métricas
   // =========================================================================
 
   y = newPage()
   y = sectionHeader('YouTube', 'Retenção e Profundidade — Foco: tempo e consumo', YT_COLOR, y)
 
-  y = kpiTable([
+  y = kpiTableWithExplanations([
     makeKpiRow('Watch Time', youtube.watchTime, youtube.watchTimePrev, 'hours'),
     makeKpiRow('Retenção Média', youtube.retencaoMedia, youtube.retencaoMediaPrev, 'percent'),
     makeKpiRow('CTR Thumbnail', youtube.ctrThumbnail, youtube.ctrThumbnailPrev, 'percent'),
     makeKpiRow('Engajamento', youtube.engajamento, youtube.engajamentoPrev, 'percent'),
     makeKpiRow('Visualizações', youtube.visualizacoes, youtube.visualizacoesPrev),
     makeKpiRow('Novos Inscritos', youtube.novosInscritos, youtube.novosInscritosPrev),
-  ], YT_COLOR, y)
+  ], 'youtube', YT_COLOR, y)
 
+  // =========================================================================
+  // YOUTUBE — Gráficos
+  // =========================================================================
+
+  y = newPage()
+  y = sectionHeader('YouTube', 'Evolução das Métricas', YT_COLOR, y)
   y = drawChartsGrid(chartData.youtube, y)
 
   // =========================================================================
@@ -631,6 +760,28 @@ export async function exportAnalyticsPDF({
   ], YT_COLOR, y)
 
   y = drawNotes('youtube', YT_COLOR, 'YouTube', y)
+
+  // =========================================================================
+  // CONCLUSION PAGE
+  // =========================================================================
+
+  if (conclusao.trim()) {
+    y = newPage()
+
+    doc.setFillColor(96, 165, 250)
+    doc.rect(margin, y, 4, 14, 'F')
+    doc.setTextColor(96, 165, 250)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Conclusão', margin + 8, y + 6)
+    doc.setTextColor(161, 161, 170)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Considerações finais e próximos passos', margin + 8, y + 13)
+    y += 24
+
+    y = drawTextBlock(conclusao, y)
+  }
 
   // =========================================================================
   // FOOTER

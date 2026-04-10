@@ -49,6 +49,16 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { ReporteiConfig, useReporteiConfig } from '@/components/analytics/reportei-config'
 import { usePlatformData } from '@/hooks/use-reportei'
 import type { PlatformData } from '@/lib/reportei-types'
@@ -61,7 +71,7 @@ import {
   mockTopPostsYouTube,
 } from '@/lib/mock-data'
 import { PLATFORM_COLORS, PLATFORM_LABELS } from '@/lib/constants'
-import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useSupabaseState } from '@/hooks/use-supabase-state'
 import type { Platform } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
@@ -1693,7 +1703,8 @@ function formatRangeBR(range: DateRange): string {
 }
 
 function PlatformNotes({ platform, ranges }: { platform: Platform; ranges: DateRanges }) {
-  const [notes, setNotes] = useLocalStorage<PlatformNote[]>(
+  const [notes, setNotes] = useSupabaseState<PlatformNote[]>(
+    `/api/analytics-notes?plataforma=${platform}`,
     `content-dashboard:notes-${platform}`,
     []
   )
@@ -1750,6 +1761,7 @@ function PlatformNotes({ platform, ranges }: { platform: Platform; ranges: DateR
   const deleteNote = useCallback(
     (id: string) => {
       setNotes((prev) => prev.filter((n) => n.id !== id))
+      fetch('/api/analytics-notes', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
       if (expandedId === id) setExpandedId(null)
       if (editingId === id) setEditingId(null)
     },
@@ -1903,6 +1915,9 @@ export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('instagram')
   const [isMounted, setIsMounted] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false)
+  const [pdfIntroducao, setPdfIntroducao] = useState('')
+  const [pdfConclusao, setPdfConclusao] = useState('')
   const { projectId, isConfigured } = useReporteiConfig()
 
   const [dataSource, setDataSource] = useState<'mock' | 'reportei'>('mock')
@@ -2095,23 +2110,32 @@ export default function AnalyticsPage() {
         { title: 'CTR Thumbnail (%)', data: isReportei ? trendToChartData(ytTrend?.ctr, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.ctrThumbnail, 'avg'), color: YT, type: 'line' as const, suffix: '%' },
         { title: 'Engajamento (%)', data: isReportei ? trendToChartData(ytTrend?.engagement, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.engajamento, 'avg'), color: YT, type: 'line' as const, suffix: '%' },
         { title: 'Visualizações', data: isReportei ? trendToChartData(ytTrend?.impressions, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.visualizacoes), color: YT, type: 'bar' as const },
+        { title: 'Novos Inscritos', data: isReportei ? trendToChartData(ytTrend?.followers, ranges.analise) : dailyData(ytCurrent, totalDaysPdf, (m) => m.inscritos), color: YT, type: 'bar' as const },
       ],
     }
   }, [igMockFiltered, liMockFiltered, ytMockFiltered, isReportei, igTrend, liTrend, ytTrend, ranges, totalDaysPdf])
 
+  const handleOpenExportDialog = useCallback(() => {
+    setShowExportDialog(true)
+  }, [])
+
   const handleExportPDF = useCallback(async () => {
+    setShowExportDialog(false)
     setExporting(true)
 
-    // Read notes directly from localStorage at export time (separate keys per platform)
-    const notesForPdf: PlatformNote[] = []
-    for (const p of ['instagram', 'linkedin', 'youtube'] as Platform[]) {
-      try {
-        const raw = localStorage.getItem(`content-dashboard:notes-${p}`)
-        if (raw) {
-          const parsed: PlatformNote[] = JSON.parse(raw)
-          notesForPdf.push(...parsed)
-        }
-      } catch { /* empty */ }
+    // Read notes from API at export time
+    let notesForPdf: PlatformNote[] = []
+    try {
+      const res = await fetch('/api/analytics-notes')
+      if (res.ok) notesForPdf = await res.json()
+    } catch {
+      // Fallback to localStorage
+      for (const p of ['instagram', 'linkedin', 'youtube'] as Platform[]) {
+        try {
+          const raw = localStorage.getItem(`content-dashboard:notes-${p}`)
+          if (raw) notesForPdf.push(...JSON.parse(raw))
+        } catch { /* empty */ }
+      }
     }
 
     try {
@@ -2124,13 +2148,15 @@ export default function AnalyticsPage() {
         comparativo: pdfComparativo,
         notes: notesForPdf,
         chartData: pdfChartData,
+        introducao: pdfIntroducao,
+        conclusao: pdfConclusao,
       })
     } catch (err) {
       console.error('PDF export error:', err)
     } finally {
       setExporting(false)
     }
-  }, [ranges, pdfInstagram, pdfLinkedin, pdfYoutube, pdfComparativo, pdfChartData])
+  }, [ranges, pdfInstagram, pdfLinkedin, pdfYoutube, pdfComparativo, pdfChartData, pdfIntroducao, pdfConclusao])
 
   return (
     <div className="flex flex-col gap-6">
@@ -2143,7 +2169,7 @@ export default function AnalyticsPage() {
           </p>
         </div>
         <Button
-          onClick={handleExportPDF}
+          onClick={handleOpenExportDialog}
           disabled={exporting}
           className="gap-2"
           variant="outline"
@@ -2156,6 +2182,51 @@ export default function AnalyticsPage() {
           {exporting ? 'Gerando PDF...' : 'Exportar PDF'}
         </Button>
       </div>
+
+      {/* Export Dialog */}
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Exportar Relatório PDF</DialogTitle>
+            <DialogDescription>
+              Inclua uma introdução e conclusão para contextualizar o relatório. Esses textos aparecerão no início e no final do documento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="pdf-intro">Introdução</Label>
+              <Textarea
+                id="pdf-intro"
+                placeholder="Contextualize o relatório: objetivos do período, estratégias adotadas, foco principal..."
+                value={pdfIntroducao}
+                onChange={(e) => setPdfIntroducao(e.target.value)}
+                rows={5}
+                className="resize-y"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="pdf-conclusao">Conclusão</Label>
+              <Textarea
+                id="pdf-conclusao"
+                placeholder="Resuma os principais resultados, aprendizados e próximos passos..."
+                value={pdfConclusao}
+                onChange={(e) => setPdfConclusao(e.target.value)}
+                rows={5}
+                className="resize-y"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleExportPDF} className="gap-2">
+              <DownloadIcon className="size-4" />
+              Gerar Relatório
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Reportei Config + Data Source Toggle */}
       <ReporteiConfig dataSource={dataSource} onDataSourceChange={setDataSource} />
