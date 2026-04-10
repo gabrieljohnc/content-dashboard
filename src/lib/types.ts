@@ -1,6 +1,6 @@
 export type Platform = 'instagram' | 'linkedin' | 'youtube'
 
-export type PostStatus = 'backlog' | 'aprovacao' | 'aprovado' | 'agendado' | 'postado'
+export type PostStatus = 'backlog' | 'aprovacao' | 'producao' | 'revisao' | 'agendado' | 'postado' | 'analise' | 'rejeitado'
 
 export type PostType = 'feed' | 'carrossel' | 'reels' | 'stories' | 'video' | 'artigo'
 
@@ -13,8 +13,21 @@ export interface Post {
   status: PostStatus
   responsavel: string
   linkCanva?: string
+  tags?: string[]
   dataAgendamento?: string
   dataPublicacao?: string
+  criadoEm: string
+  atualizadoEm: string
+}
+
+export type IdeaStatus = 'ideia' | 'aprovado' | 'rejeitado'
+
+export interface Idea {
+  id: string
+  descricao: string
+  fontes?: string
+  imagens?: string[]
+  status: IdeaStatus
   criadoEm: string
   atualizadoEm: string
 }

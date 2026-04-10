@@ -30,7 +30,7 @@ import {
   POST_TYPE_LABELS,
 } from '@/lib/constants'
 import type { Post, Platform } from '@/lib/types'
-import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useSupabaseState } from '@/hooks/use-supabase-state'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -274,7 +274,7 @@ export default function CalendarioPage() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
-  const [posts] = useLocalStorage<Post[]>('content-dashboard:posts', mockPosts)
+  const [posts] = useSupabaseState<Post[]>('/api/posts', 'content-dashboard:posts', mockPosts)
 
   // Build calendar days (full weeks covering the month)
   const calendarDays = useMemo(() => {

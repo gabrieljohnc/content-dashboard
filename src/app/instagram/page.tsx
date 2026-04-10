@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { PlusIcon, LinkIcon, UserIcon, CalendarIcon, CheckCircleIcon, PencilIcon, ExternalLinkIcon, GripVerticalIcon } from 'lucide-react'
+import { PlusIcon, LinkIcon, UserIcon, CalendarIcon, CheckCircleIcon, XCircleIcon, PencilIcon, ExternalLinkIcon, GripVerticalIcon, Trash2Icon } from 'lucide-react'
 import { DndContext, DragOverlay, useDroppable, useDraggable, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,7 +32,7 @@ import {
   POST_TYPE_LABELS,
 } from '@/lib/constants'
 import type { Post, Platform, PostStatus, PostType } from '@/lib/types'
-import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useSupabaseState } from '@/hooks/use-supabase-state'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -137,9 +137,9 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
             <Input value={form.titulo} onChange={(e) => handleField('titulo', e.target.value)} />
           </div>
 
-          {/* Legenda */}
+          {/* Legenda / Ideia */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Legenda</label>
+            <label className="text-xs font-medium text-muted-foreground">{form.status === 'backlog' ? 'Ideia do post' : 'Legenda'}</label>
             <textarea
               value={form.legenda}
               onChange={(e) => handleField('legenda', e.target.value)}
@@ -186,9 +186,12 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
                 <SelectContent>
                   <SelectItem value="backlog">Backlog</SelectItem>
                   <SelectItem value="aprovacao">Aprovação</SelectItem>
-                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                  <SelectItem value="producao">Produção</SelectItem>
+                  <SelectItem value="revisao">Revisão</SelectItem>
                   <SelectItem value="agendado">Agendado</SelectItem>
                   <SelectItem value="postado">Postado</SelectItem>
+                  <SelectItem value="analise">Análise</SelectItem>
+                  <SelectItem value="rejeitado">Rejeitado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -263,14 +266,26 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
 // Post Card
 // ---------------------------------------------------------------------------
 
-function PostCardContent({ post, onAprovar, isDragging }: { post: Post; onAprovar?: (e: React.MouseEvent) => void; isDragging?: boolean }) {
+function PostCardContent({ post, onAprovar, onRejeitar, onDelete, isDragging }: {
+  post: Post
+  onAprovar?: (e: React.MouseEvent) => void
+  onRejeitar?: (e: React.MouseEvent) => void
+  onDelete?: (e: React.MouseEvent) => void
+  isDragging?: boolean
+}) {
   const scheduleDate = post.dataAgendamento ?? post.dataPublicacao
+  const showActions = post.status === 'aprovacao' || post.status === 'revisao'
   return (
     <Card size="sm" className={`${isDragging ? 'opacity-50 ring-1 ring-ring' : 'hover:ring-1 hover:ring-ring/50'} transition-all`}>
       <CardHeader className="gap-2 pb-0">
         <div className="flex flex-wrap items-center gap-1.5">
           <PlatformBadge platform={post.plataforma} />
           <TypeBadge tipo={post.tipo} />
+          {post.tags?.includes('requer-ajuste') && (
+            <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-400">
+              Requer ajuste
+            </span>
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
@@ -279,6 +294,7 @@ function PostCardContent({ post, onAprovar, isDragging }: { post: Post; onAprova
         </p>
         {post.legenda && (
           <p className="line-clamp-2 text-xs text-muted-foreground">
+            {post.status === 'backlog' ? <span className="text-amber-400/70 font-medium">Ideia: </span> : null}
             {post.legenda}
           </p>
         )}
@@ -298,23 +314,37 @@ function PostCardContent({ post, onAprovar, isDragging }: { post: Post; onAprova
             <span className="truncate text-blue-400">Arte no Canva</span>
           </div>
         )}
-        {post.status === 'aprovacao' && onAprovar && (
-          <Button
-            size="sm"
-            className="mt-1 w-full gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
-            onClick={onAprovar}
-          >
-            <CheckCircleIcon className="size-3.5" />
-            Aprovar
-          </Button>
+        {showActions && onAprovar && onRejeitar && (
+          <div className="mt-1 flex gap-2">
+            <Button
+              size="sm"
+              className="flex-1 gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+              onClick={onAprovar}
+            >
+              <CheckCircleIcon className="size-3.5" />
+              Aprovar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 gap-1.5 border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300 text-xs"
+              onClick={onRejeitar}
+            >
+              <XCircleIcon className="size-3.5" />
+              Rejeitar
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
   )
 }
 
-function PostCard({ post, onUpdate }: { post: Post; onUpdate: (post: Post) => void }) {
+function PostCard({ post, onUpdate, onDelete }: { post: Post; onUpdate: (post: Post) => void; onDelete: (id: string) => void }) {
   const [detailOpen, setDetailOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [agendamentoOpen, setAgendamentoOpen] = useState(false)
+  const [dataAgendamento, setDataAgendamento] = useState('')
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: post.id,
     data: { post },
@@ -322,30 +352,119 @@ function PostCard({ post, onUpdate }: { post: Post; onUpdate: (post: Post) => vo
 
   function handleAprovar(e: React.MouseEvent) {
     e.stopPropagation()
+    if (post.status === 'aprovacao') {
+      onUpdate({
+        ...post,
+        status: 'producao',
+        tags: post.tags?.filter((t) => t !== 'requer-ajuste'),
+        responsavel: 'John',
+        atualizadoEm: new Date().toISOString(),
+      })
+    } else if (post.status === 'revisao') {
+      setAgendamentoOpen(true)
+    }
+  }
+
+  function handleRejeitar(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (post.status === 'aprovacao') {
+      onUpdate({
+        ...post,
+        status: 'rejeitado',
+        atualizadoEm: new Date().toISOString(),
+      })
+    } else if (post.status === 'revisao') {
+      const tags = post.tags?.filter((t) => t !== 'requer-ajuste') ?? []
+      onUpdate({
+        ...post,
+        status: 'producao',
+        tags: [...tags, 'requer-ajuste'],
+        atualizadoEm: new Date().toISOString(),
+      })
+    }
+  }
+
+  function handleConfirmAgendamento() {
+    if (!dataAgendamento) return
+    const [y, m, d] = dataAgendamento.split('-').map(Number)
     onUpdate({
       ...post,
-      status: 'aprovado',
-      responsavel: 'John',
+      status: 'agendado',
+      tags: post.tags?.filter((t) => t !== 'requer-ajuste'),
+      dataAgendamento: new Date(y, m - 1, d, 12).toISOString(),
       atualizadoEm: new Date().toISOString(),
     })
+    setAgendamentoOpen(false)
+    setDataAgendamento('')
   }
 
   return (
     <>
       <div ref={setNodeRef} className="relative cursor-pointer" onClick={() => { if (!isDragging) setDetailOpen(true) }}>
-        {/* Drag handle */}
-        <button
-          {...listeners}
-          {...attributes}
-          className="absolute top-2.5 right-2 z-10 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/80 transition-colors cursor-grab active:cursor-grabbing"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVerticalIcon className="size-3.5" />
-        </button>
-        <PostCardContent post={post} onAprovar={handleAprovar} isDragging={isDragging} />
+        {/* Card actions: delete + drag */}
+        <div className="absolute top-2.5 right-2 z-10 flex items-center gap-0.5">
+          <button
+            className="p-0.5 rounded text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            onClick={(e) => { e.stopPropagation(); setDeleteOpen(true) }}
+          >
+            <Trash2Icon className="size-3.5" />
+          </button>
+          <button
+            {...listeners}
+            {...attributes}
+            className="p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/80 transition-colors cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVerticalIcon className="size-3.5" />
+          </button>
+        </div>
+        <PostCardContent post={post} onAprovar={handleAprovar} onRejeitar={handleRejeitar} isDragging={isDragging} />
       </div>
 
       <PostDetailDialog post={post} onUpdate={onUpdate} open={detailOpen} onOpenChange={setDetailOpen} />
+
+      {/* Dialog de agendamento (revisão → agendado) */}
+      <Dialog open={agendamentoOpen} onOpenChange={setAgendamentoOpen}>
+        <DialogContent className="sm:max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Agendar Publicação</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Selecione a data para agendamento de &ldquo;{post.titulo}&rdquo;
+          </p>
+          <Input
+            type="date"
+            value={dataAgendamento}
+            onChange={(e) => setDataAgendamento(e.target.value)}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setAgendamentoOpen(false)}>Cancelar</Button>
+            <Button disabled={!dataAgendamento} onClick={handleConfirmAgendamento}>
+              <CalendarIcon className="size-3.5 mr-1.5" />
+              Agendar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Excluir Post</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja excluir &ldquo;{post.titulo}&rdquo;? Essa ação não pode ser desfeita.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancelar</Button>
+            <Button variant="destructive" className="gap-1.5" onClick={() => { setDeleteOpen(false); onDelete(post.id) }}>
+              <Trash2Icon className="size-3.5" />
+              Excluir
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
@@ -361,9 +480,12 @@ const COLUMN_CONFIG: {
 }[] = [
   { status: 'backlog', label: 'Backlog', color: '#71717a' },
   { status: 'aprovacao', label: 'Aprovação', color: '#eab308' },
-  { status: 'aprovado', label: 'Aprovado', color: '#10b981' },
+  { status: 'producao', label: 'Produção', color: '#f97316' },
+  { status: 'revisao', label: 'Revisão', color: '#a855f7' },
   { status: 'agendado', label: 'Agendado', color: '#3b82f6' },
   { status: 'postado', label: 'Postado', color: '#22c55e' },
+  { status: 'analise', label: 'Análise', color: '#06b6d4' },
+  { status: 'rejeitado', label: 'Rejeitado', color: '#ef4444' },
 ]
 
 function KanbanColumn({
@@ -372,12 +494,14 @@ function KanbanColumn({
   color,
   posts,
   onUpdatePost,
+  onDeletePost,
 }: {
   status: PostStatus
   label: string
   color: string
   posts: Post[]
   onUpdatePost: (post: Post) => void
+  onDeletePost: (id: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
 
@@ -413,7 +537,7 @@ function KanbanColumn({
             Nenhum post
           </p>
         ) : (
-          columnPosts.map((post) => <PostCard key={post.id} post={post} onUpdate={onUpdatePost} />)
+          columnPosts.map((post) => <PostCard key={post.id} post={post} onUpdate={onUpdatePost} onDelete={onDeletePost} />)
         )}
       </div>
     </div>
@@ -590,9 +714,12 @@ function NewPostDialog({
                 <SelectContent>
                   <SelectItem value="backlog">Backlog</SelectItem>
                   <SelectItem value="aprovacao">Aprovação</SelectItem>
-                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                  <SelectItem value="producao">Produção</SelectItem>
+                  <SelectItem value="revisao">Revisão</SelectItem>
                   <SelectItem value="agendado">Agendado</SelectItem>
                   <SelectItem value="postado">Postado</SelectItem>
+                  <SelectItem value="analise">Análise</SelectItem>
+                  <SelectItem value="rejeitado">Rejeitado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -660,7 +787,8 @@ const PLATFORM_TABS: { value: ActivePlatform; label: string }[] = [
 ]
 
 export default function InstagramPage() {
-  const [posts, setPosts] = useLocalStorage<Post[]>(
+  const [posts, setPosts] = useSupabaseState<Post[]>(
+    '/api/posts',
     'content-dashboard:posts',
     mockPosts
   )
@@ -678,6 +806,11 @@ export default function InstagramPage() {
 
   function handleUpdatePost(updated: Post) {
     setPosts((prev) => prev.map((p) => p.id === updated.id ? updated : p))
+  }
+
+  function handleDeletePost(id: string) {
+    setPosts((prev) => prev.filter((p) => p.id !== id))
+    fetch('/api/posts', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
   }
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -748,6 +881,7 @@ export default function InstagramPage() {
                     color={color}
                     posts={filteredPosts}
                     onUpdatePost={handleUpdatePost}
+                    onDeletePost={handleDeletePost}
                   />
                 ))}
               </div>
