@@ -61,6 +61,7 @@ export async function POST(request: Request) {
 }
 
 async function fetchRows(projectId: number, start: string, end: string): Promise<DailyMetricRow[]> {
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('daily_metrics')
     .select('*')

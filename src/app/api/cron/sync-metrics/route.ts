@@ -159,6 +159,7 @@ export async function GET(request: Request) {
 
         // Upsert all rows
         if (rows.length > 0) {
+          if (!supabase) { errors += rows.length; continue }
           const { error: upsertError } = await supabase
             .from('daily_metrics')
             .upsert(rows, { onConflict: 'project_id,platform,date' })

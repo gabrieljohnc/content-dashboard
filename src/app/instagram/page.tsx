@@ -514,7 +514,7 @@ function KanbanColumn({
     })
 
   return (
-    <div ref={setNodeRef} className={`flex min-w-0 flex-1 flex-col gap-3 rounded-lg transition-colors ${isOver ? 'bg-muted/30 ring-2 ring-ring/30' : ''}`}>
+    <div ref={setNodeRef} className={`flex w-72 shrink-0 flex-col gap-3 rounded-lg transition-colors ${isOver ? 'bg-muted/30 ring-2 ring-ring/30' : ''}`}>
       {/* Column header */}
       <div
         className="rounded-t-lg border-t-2 bg-muted/40 px-3 py-2"
@@ -872,18 +872,20 @@ export default function InstagramPage() {
         {PLATFORM_TABS.map(({ value }) => (
           <TabsContent key={value} value={value}>
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                {COLUMN_CONFIG.map(({ status, label, color }) => (
-                  <KanbanColumn
-                    key={status}
-                    status={status}
-                    label={label}
-                    color={color}
-                    posts={filteredPosts}
-                    onUpdatePost={handleUpdatePost}
-                    onDeletePost={handleDeletePost}
-                  />
-                ))}
+              <div className="mt-4 overflow-x-auto scrollbar-visible" style={{ transform: 'rotateX(180deg)' }}>
+                <div className="flex gap-4 pb-3" style={{ transform: 'rotateX(180deg)' }}>
+                  {COLUMN_CONFIG.map(({ status, label, color }) => (
+                    <KanbanColumn
+                      key={status}
+                      status={status}
+                      label={label}
+                      color={color}
+                      posts={filteredPosts}
+                      onUpdatePost={handleUpdatePost}
+                      onDeletePost={handleDeletePost}
+                    />
+                  ))}
+                </div>
               </div>
               <DragOverlay>
                 {activePost ? (

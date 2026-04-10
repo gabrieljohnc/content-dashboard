@@ -145,7 +145,7 @@ export default function FormularioIdeiasPage() {
               </Label>
               <Textarea
                 id="descricao"
-                placeholder="Qual é a sua ideia de conteúdo? Descreva o tema, formato, abordagem..."
+                placeholder="Qual a sua ideia de conteúdo?"
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={5}
@@ -156,18 +156,19 @@ export default function FormularioIdeiasPage() {
 
             {/* Fontes */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="fontes">Fontes <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Label htmlFor="fontes">Fontes <span className="text-red-400">*</span></Label>
               <Input
                 id="fontes"
                 placeholder="Links, referências, artigos, perfis..."
                 value={fontes}
                 onChange={(e) => setFontes(e.target.value)}
+                required
               />
             </div>
 
-            {/* Imagens */}
+            {/* Arquivos */}
             <div className="flex flex-col gap-2">
-              <Label>Imagens <span className="text-muted-foreground font-normal">(opcional, max {MAX_IMAGES})</span></Label>
+              <Label>Arquivos</Label>
 
               {imagens.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-1">
@@ -196,14 +197,14 @@ export default function FormularioIdeiasPage() {
                   onClick={() => fileRef.current?.click()}
                 >
                   <ImagePlusIcon className="size-4" />
-                  Adicionar imagem
+                  Adicionar arquivo
                 </Button>
               )}
 
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="*/*"
                 multiple
                 className="hidden"
                 onChange={handleAddImages}

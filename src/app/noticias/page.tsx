@@ -403,19 +403,32 @@ async function fetchProcessedIds(): Promise<Set<number>> {
   }
 }
 
-async function markProcessed(ids: number[]): Promise<void> {
+function markProcessed(ids: number[]) {
+  // API
   fetch('/api/noticias-processadas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) }).catch(() => {})
+  // localStorage
+  try {
+    const existing: number[] = JSON.parse(localStorage.getItem('content-dashboard:noticias-processadas') || '[]')
+    const merged = [...new Set([...existing, ...ids])]
+    localStorage.setItem('content-dashboard:noticias-processadas', JSON.stringify(merged))
+  } catch { /* ignore */ }
 }
 
 async function syncPublicarToBacklog(noticias: Noticia[]) {
   const processed = await fetchProcessedIds()
   const isFirstLoad = processed.size === 0
 
-  const publicar = noticias.filter((n) => n.json_avaliacao?.decisao === 'Publicar')
+  // Also apply local overrides to detect manually approved items
+  let overrides: Record<number, string> = {}
+  try { overrides = JSON.parse(localStorage.getItem('content-dashboard:noticias-overrides') || '{}') } catch { /* ignore */ }
+
+  const publicar = noticias.filter((n) => {
+    const decisao = overrides[n.id] || n.json_avaliacao?.decisao
+    return decisao === 'Publicar'
+  })
 
   if (isFirstLoad) {
-    const allIds = noticias.map((n) => n.id)
-    markProcessed(allIds)
+    markProcessed(noticias.map((n) => n.id))
     return
   }
 
@@ -435,7 +448,15 @@ async function syncPublicarToBacklog(noticias: Noticia[]) {
     atualizadoEm: now,
   }))
 
+  // Save posts to API + localStorage
   fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPosts) }).catch(() => {})
+  try {
+    const raw = localStorage.getItem('content-dashboard:posts')
+    const posts = raw ? JSON.parse(raw) : []
+    posts.unshift(...newPosts)
+    localStorage.setItem('content-dashboard:posts', JSON.stringify(posts))
+  } catch { /* ignore */ }
+
   markProcessed(newPublicar.map((n) => n.id))
 }
 
@@ -452,7 +473,16 @@ function sendNoticiaToBacklog(noticia: Noticia) {
     criadoEm: now,
     atualizadoEm: now,
   }
+
+  // Save to API (Supabase) + localStorage fallback
   fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newPost) }).catch(() => {})
+  try {
+    const raw = localStorage.getItem('content-dashboard:posts')
+    const posts = raw ? JSON.parse(raw) : []
+    posts.unshift(newPost)
+    localStorage.setItem('content-dashboard:posts', JSON.stringify(posts))
+  } catch { /* ignore */ }
+
   markProcessed([noticia.id])
 }
 
@@ -460,14 +490,25 @@ async function fetchOverrides(): Promise<Record<number, string>> {
   try {
     const res = await fetch('/api/noticias-overrides')
     if (!res.ok) throw new Error('fetch failed')
-    return await res.json()
+    const data = await res.json()
+    // Also cache to localStorage
+    if (data && Object.keys(data).length > 0) {
+      localStorage.setItem('content-dashboard:noticias-overrides', JSON.stringify(data))
+    }
+    return data
   } catch {
     try { return JSON.parse(localStorage.getItem('content-dashboard:noticias-overrides') || '{}') } catch { return {} }
   }
 }
 
 function saveOverride(id: number, decisao: string) {
+  // Save to API + localStorage
   fetch('/api/noticias-overrides', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ noticia_id: id, decisao }) }).catch(() => {})
+  try {
+    const overrides = JSON.parse(localStorage.getItem('content-dashboard:noticias-overrides') || '{}')
+    overrides[id] = decisao
+    localStorage.setItem('content-dashboard:noticias-overrides', JSON.stringify(overrides))
+  } catch { /* ignore */ }
 }
 
 // ---------------------------------------------------------------------------
