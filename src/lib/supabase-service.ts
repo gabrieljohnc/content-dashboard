@@ -1,8 +1,53 @@
 import { supabase, type PostRow, type IdeaRow, type AnalyticsNoteRow, type CompetitorNoteRow, type NoticiaOverrideRow } from './supabase'
+import type { Post, PostFormat, PostObjective, PostAudience, PostCTA, Platform, PostStatus } from './types'
 
 function db() {
   if (!supabase) throw new Error('Supabase not configured')
   return supabase
+}
+
+// =========================================================================
+// POSTS — Mapeamento camelCase (Post) ↔ snake_case (PostRow)
+// =========================================================================
+
+export function postToRow(post: Post): PostRow {
+  return {
+    id: post.id,
+    titulo: post.titulo,
+    legenda: post.legenda,
+    formato: post.formato ?? null,
+    plataforma: post.plataforma ?? null,
+    status: post.status,
+    objetivo: post.objetivo ?? null,
+    publico: post.publico ?? null,
+    mensagem_principal: post.mensagemPrincipal ?? null,
+    cta: post.cta ?? null,
+    tags: post.tags ?? [],
+    data_agendamento: post.dataAgendamento ?? null,
+    data_publicacao: post.dataPublicacao ?? null,
+    criado_em: post.criadoEm,
+    atualizado_em: post.atualizadoEm,
+  }
+}
+
+export function rowToPost(row: PostRow): Post {
+  return {
+    id: row.id,
+    titulo: row.titulo,
+    legenda: row.legenda ?? '',
+    formato: row.formato ? (row.formato as PostFormat) : undefined,
+    plataforma: row.plataforma ? (row.plataforma as Platform) : undefined,
+    status: row.status as PostStatus,
+    objetivo: row.objetivo ? (row.objetivo as PostObjective) : undefined,
+    publico: row.publico ? (row.publico as PostAudience) : undefined,
+    mensagemPrincipal: row.mensagem_principal ?? undefined,
+    cta: row.cta ? (row.cta as PostCTA) : undefined,
+    tags: row.tags && row.tags.length > 0 ? row.tags : undefined,
+    dataAgendamento: row.data_agendamento ?? undefined,
+    dataPublicacao: row.data_publicacao ?? undefined,
+    criadoEm: row.criado_em,
+    atualizadoEm: row.atualizado_em,
+  }
 }
 
 // =========================================================================

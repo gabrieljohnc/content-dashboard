@@ -184,7 +184,7 @@ export default function HomePage() {
                     className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <PlatformBadge platform={post.plataforma} />
+                      {post.plataforma && <PlatformBadge platform={post.plataforma} />}
                       <span className="text-sm font-medium leading-snug">
                         {post.titulo}
                       </span>

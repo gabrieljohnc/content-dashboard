@@ -2,17 +2,43 @@ export type Platform = 'instagram' | 'linkedin' | 'youtube'
 
 export type PostStatus = 'backlog' | 'aprovacao' | 'producao' | 'revisao' | 'agendado' | 'postado' | 'analise' | 'rejeitado'
 
+// Legacy enum kept for analytics mock data (TopPostInstagram).
 export type PostType = 'feed' | 'carrossel' | 'reels' | 'stories' | 'video' | 'artigo'
+
+export type PostFormat = 'carrossel' | 'post-estatico' | 'reels' | 'stories'
+
+export type PostObjective =
+  | 'alcance-novo-publico'
+  | 'reconhecimento-marca'
+  | 'crescimento-base'
+  | 'autoridade-setor'
+  | 'engajamento'
+
+export type PostAudience =
+  | 'eletricistas-autonomos'
+  | 'equipes-concessionarias'
+  | 'engenheiros-eletricistas'
+  | 'supervisores-gestores'
+
+export type PostCTA =
+  | 'salve-post'
+  | 'compartilhe-equipe'
+  | 'siga-perfil'
+  | 'marque-colega'
+  | 'link-bio'
+  | 'contato-whatsapp'
 
 export interface Post {
   id: string
   titulo: string
   legenda: string
-  tipo: PostType
-  plataforma: Platform
+  formato?: PostFormat
+  plataforma?: Platform
   status: PostStatus
-  responsavel: string
-  linkCanva?: string
+  objetivo?: PostObjective
+  publico?: PostAudience
+  mensagemPrincipal?: string
+  cta?: PostCTA
   tags?: string[]
   dataAgendamento?: string
   dataPublicacao?: string

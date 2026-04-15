@@ -27,7 +27,7 @@ import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
   STATUS_LABELS,
-  POST_TYPE_LABELS,
+  POST_FORMAT_LABELS,
 } from '@/lib/constants'
 import type { Post, Platform } from '@/lib/types'
 import { useSupabaseState } from '@/hooks/use-supabase-state'
@@ -110,7 +110,7 @@ function PostChip({
   post: Post
   onClick: (post: Post) => void
 }) {
-  const color = PLATFORM_COLORS[post.plataforma]
+  const color = post.plataforma ? PLATFORM_COLORS[post.plataforma] : '#71717a'
 
   return (
     <button
@@ -209,7 +209,7 @@ function PostDetailDialog({
 }) {
   if (!post) return null
 
-  const color = PLATFORM_COLORS[post.plataforma]
+  const color = post.plataforma ? PLATFORM_COLORS[post.plataforma] : '#71717a'
   const dateStr = getPostDate(post)
 
   return (
@@ -221,18 +221,20 @@ function PostDetailDialog({
 
         <div className="flex flex-col gap-3 pt-1">
           {/* Plataforma badge */}
-          <span
-            className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold"
-            style={{ backgroundColor: `${color}22`, color }}
-          >
-            {PLATFORM_LABELS[post.plataforma]}
-          </span>
+          {post.plataforma && (
+            <span
+              className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+              style={{ backgroundColor: `${color}22`, color }}
+            >
+              {PLATFORM_LABELS[post.plataforma]}
+            </span>
+          )}
 
           {/* Details grid */}
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <div className="flex flex-col gap-0.5">
-              <dt className="text-xs font-medium text-zinc-500">Tipo</dt>
-              <dd className="text-zinc-200">{POST_TYPE_LABELS[post.tipo]}</dd>
+              <dt className="text-xs font-medium text-zinc-500">Formato</dt>
+              <dd className="text-zinc-200">{post.formato ? POST_FORMAT_LABELS[post.formato] : '—'}</dd>
             </div>
             <div className="flex flex-col gap-0.5">
               <dt className="text-xs font-medium text-zinc-500">Status</dt>
@@ -289,7 +291,8 @@ export default function CalendarioPage() {
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
       const hasDate = Boolean(post.dataAgendamento ?? post.dataPublicacao)
-      return hasDate && activePlatforms.has(post.plataforma)
+      // Posts sem plataforma não aparecem no calendário de plataforma
+      return hasDate && post.plataforma !== undefined && activePlatforms.has(post.plataforma)
     })
   }, [posts, activePlatforms])
 

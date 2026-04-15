@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPosts, upsertPost, deletePost, bulkUpsertPosts } from '@/lib/supabase-service'
-import type { PostRow } from '@/lib/supabase'
+import { getPosts, upsertPost, deletePost, bulkUpsertPosts, postToRow, rowToPost } from '@/lib/supabase-service'
+import type { Post } from '@/lib/types'
 
 export async function GET() {
   try {
-    const posts = await getPosts()
-    return NextResponse.json(posts)
+    const rows = await getPosts()
+    return NextResponse.json(rows.map(rowToPost))
   } catch (error) {
     console.error('GET /api/posts error:', error)
     return NextResponse.json([], { status: 500 })
@@ -16,9 +16,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     if (Array.isArray(body)) {
-      await bulkUpsertPosts(body as PostRow[])
+      const rows = (body as Post[]).map(postToRow)
+      await bulkUpsertPosts(rows)
     } else {
-      await upsertPost(body as PostRow)
+      await upsertPost(postToRow(body as Post))
     }
     return NextResponse.json({ ok: true })
   } catch (error) {

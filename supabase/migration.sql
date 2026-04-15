@@ -4,16 +4,23 @@
 -- =============================================
 
 -- 1. Posts (kanban de conteudo)
+-- NOTE: Backlog card refactor (2026-04-15)
+--   - `tipo` renomeado para `formato` e com valores novos
+--   - `plataforma` passa a ser opcional (sem NOT NULL / sem default)
+--   - novos campos: objetivo, publico, mensagem_principal, cta
+--   - removidos: responsavel, link_canva
 CREATE TABLE IF NOT EXISTS posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   titulo TEXT NOT NULL,
   legenda TEXT NOT NULL DEFAULT '',
-  tipo TEXT NOT NULL DEFAULT 'feed',
-  plataforma TEXT NOT NULL DEFAULT 'instagram',
+  formato TEXT,
+  plataforma TEXT,
   status TEXT NOT NULL DEFAULT 'backlog',
-  responsavel TEXT NOT NULL DEFAULT 'John',
+  objetivo TEXT,
+  publico TEXT,
+  mensagem_principal TEXT,
+  cta TEXT,
   tags TEXT[] DEFAULT '{}',
-  link_canva TEXT,
   data_agendamento TIMESTAMPTZ,
   data_publicacao TIMESTAMPTZ,
   criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -22,6 +29,47 @@ CREATE TABLE IF NOT EXISTS posts (
 
 CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
 CREATE INDEX IF NOT EXISTS idx_posts_plataforma ON posts(plataforma);
+
+-- ---------------------------------------------------------------
+-- Migration patch (idempotente) — aplica em bancos já existentes:
+-- rename tipo -> formato, drop defaults/NOT NULL, mapeia valores
+-- antigos, adiciona novas colunas, remove colunas descontinuadas.
+-- ---------------------------------------------------------------
+DO $$
+BEGIN
+  -- Rename tipo -> formato se ainda existir
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'posts' AND column_name = 'tipo'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'posts' AND column_name = 'formato'
+  ) THEN
+    EXECUTE 'ALTER TABLE posts RENAME COLUMN tipo TO formato';
+  END IF;
+
+  -- Formato fica nullable sem default
+  EXECUTE 'ALTER TABLE posts ALTER COLUMN formato DROP NOT NULL';
+  EXECUTE 'ALTER TABLE posts ALTER COLUMN formato DROP DEFAULT';
+
+  -- Mapear valores antigos de tipo -> formato novo
+  EXECUTE 'UPDATE posts SET formato = ''post-estatico'' WHERE formato = ''feed''';
+  EXECUTE 'UPDATE posts SET formato = NULL WHERE formato IN (''video'', ''artigo'')';
+
+  -- Plataforma passa a ser nullable sem default
+  EXECUTE 'ALTER TABLE posts ALTER COLUMN plataforma DROP NOT NULL';
+  EXECUTE 'ALTER TABLE posts ALTER COLUMN plataforma DROP DEFAULT';
+
+  -- Novas colunas
+  EXECUTE 'ALTER TABLE posts ADD COLUMN IF NOT EXISTS objetivo TEXT';
+  EXECUTE 'ALTER TABLE posts ADD COLUMN IF NOT EXISTS publico TEXT';
+  EXECUTE 'ALTER TABLE posts ADD COLUMN IF NOT EXISTS mensagem_principal TEXT';
+  EXECUTE 'ALTER TABLE posts ADD COLUMN IF NOT EXISTS cta TEXT';
+
+  -- Colunas descontinuadas
+  EXECUTE 'ALTER TABLE posts DROP COLUMN IF EXISTS responsavel';
+  EXECUTE 'ALTER TABLE posts DROP COLUMN IF EXISTS link_canva';
+END $$;
 
 -- 2. Ideas (banco de ideias)
 CREATE TABLE IF NOT EXISTS ideas (

@@ -35,10 +35,7 @@ function addPostToBacklog(idea: Idea) {
     id: crypto.randomUUID(),
     titulo: idea.descricao.split(/\s+/).slice(0, 3).join(' '),
     legenda: idea.descricao,
-    tipo: 'feed',
-    plataforma: 'instagram',
     status: 'backlog',
-    responsavel: 'John',
     criadoEm: now,
     atualizadoEm: now,
   }

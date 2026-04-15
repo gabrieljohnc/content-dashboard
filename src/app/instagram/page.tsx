@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { PlusIcon, LinkIcon, UserIcon, CalendarIcon, CheckCircleIcon, XCircleIcon, PencilIcon, ExternalLinkIcon, GripVerticalIcon, Trash2Icon } from 'lucide-react'
+import { PlusIcon, CalendarIcon, CheckCircleIcon, XCircleIcon, GripVerticalIcon, Trash2Icon, TargetIcon, UsersIcon, MegaphoneIcon, SparklesIcon } from 'lucide-react'
 import { DndContext, DragOverlay, useDroppable, useDraggable, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,9 +29,12 @@ import { mockPosts } from '@/lib/mock-data'
 import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
-  POST_TYPE_LABELS,
+  POST_FORMAT_LABELS,
+  POST_OBJECTIVE_LABELS,
+  POST_AUDIENCE_LABELS,
+  POST_CTA_LABELS,
 } from '@/lib/constants'
-import type { Post, Platform, PostStatus, PostType } from '@/lib/types'
+import type { Post, Platform, PostStatus, PostFormat, PostObjective, PostAudience, PostCTA } from '@/lib/types'
 import { useSupabaseState } from '@/hooks/use-supabase-state'
 
 // ---------------------------------------------------------------------------
@@ -53,8 +56,11 @@ function formatDate(dateStr?: string): string {
   })
 }
 
-function getDefaultResponsavel(status: PostStatus): string {
-  return status === 'aprovacao' ? 'Lucas' : 'John'
+// Estágios que exibem o campo "Data de Agendamento" (no card e nos dialogs).
+const STATUSES_WITH_DATE: PostStatus[] = ['agendado', 'postado', 'analise']
+
+function statusShowsDate(status: PostStatus): boolean {
+  return STATUSES_WITH_DATE.includes(status)
 }
 
 // ---------------------------------------------------------------------------
@@ -74,10 +80,24 @@ function PlatformBadge({ platform }: { platform: Platform }) {
   )
 }
 
-function TypeBadge({ tipo }: { tipo: PostType }) {
+function FormatBadge({ formato }: { formato: PostFormat }) {
   return (
     <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-      {POST_TYPE_LABELS[tipo]}
+      {POST_FORMAT_LABELS[formato]}
+    </span>
+  )
+}
+
+function MetaBadge({ icon: Icon, label, tone }: { icon: React.ComponentType<{ className?: string }>; label: string; tone: 'indigo' | 'cyan' | 'rose' }) {
+  const toneClass = {
+    indigo: 'bg-indigo-500/15 text-indigo-300',
+    cyan: 'bg-cyan-500/15 text-cyan-300',
+    rose: 'bg-rose-500/15 text-rose-300',
+  }[tone]
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${toneClass}`}>
+      <Icon className="size-3" />
+      <span className="truncate">{label}</span>
     </span>
   )
 }
@@ -87,24 +107,21 @@ function TypeBadge({ tipo }: { tipo: PostType }) {
 // ---------------------------------------------------------------------------
 
 function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; onUpdate: (post: Post) => void; open: boolean; onOpenChange: (open: boolean) => void }) {
-  const [editingCanvaLink, setEditingCanvaLink] = useState(false)
   const [form, setForm] = useState({
     titulo: post.titulo,
     legenda: post.legenda,
-    tipo: post.tipo,
-    plataforma: post.plataforma,
+    formato: post.formato ?? '',
+    plataforma: post.plataforma ?? '',
     status: post.status,
-    responsavel: post.responsavel,
-    linkCanva: post.linkCanva || '',
+    objetivo: post.objetivo ?? '',
+    publico: post.publico ?? '',
+    mensagemPrincipal: post.mensagemPrincipal ?? '',
+    cta: post.cta ?? '',
     dataAgendamento: post.dataAgendamento ? post.dataAgendamento.split('T')[0] : '',
   })
 
   function handleField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
-    const next = { ...form, [key]: value }
-    if (key === 'status') {
-      next.responsavel = getDefaultResponsavel(value as PostStatus)
-    }
-    setForm(next)
+    setForm({ ...form, [key]: value })
   }
 
   function handleSave() {
@@ -112,16 +129,20 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
       ...post,
       titulo: form.titulo.trim(),
       legenda: form.legenda.trim(),
-      tipo: form.tipo,
-      plataforma: form.plataforma,
+      formato: form.formato ? (form.formato as PostFormat) : undefined,
+      plataforma: form.plataforma ? (form.plataforma as Platform) : undefined,
       status: form.status,
-      responsavel: form.responsavel.trim() || getDefaultResponsavel(form.status),
-      linkCanva: form.linkCanva.trim() || undefined,
+      objetivo: form.objetivo ? (form.objetivo as PostObjective) : undefined,
+      publico: form.publico ? (form.publico as PostAudience) : undefined,
+      mensagemPrincipal: form.mensagemPrincipal.trim() || undefined,
+      cta: form.cta ? (form.cta as PostCTA) : undefined,
       dataAgendamento: form.dataAgendamento ? (() => { const [y, m, d] = form.dataAgendamento.split('-').map(Number); return new Date(y, m - 1, d, 12).toISOString() })() : undefined,
       atualizadoEm: new Date().toISOString(),
     })
     onOpenChange(false)
   }
+
+  const isBacklog = form.status === 'backlog'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,35 +160,85 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
 
           {/* Legenda / Ideia */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">{form.status === 'backlog' ? 'Ideia do post' : 'Legenda'}</label>
+            <label className="text-xs font-medium text-muted-foreground">{isBacklog ? 'Ideia do post' : 'Legenda'}</label>
             <textarea
               value={form.legenda}
               onChange={(e) => handleField('legenda', e.target.value)}
-              rows={5}
+              rows={isBacklog ? 3 : 5}
               className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 resize-none"
             />
           </div>
 
-          {/* Row: Tipo + Plataforma */}
+          {/* Mensagem principal */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Mensagem principal</label>
+            <textarea
+              placeholder="Qual a mensagem central do post?"
+              value={form.mensagemPrincipal}
+              onChange={(e) => handleField('mensagemPrincipal', e.target.value)}
+              rows={2}
+              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 resize-none"
+            />
+          </div>
+
+          {/* Row: Objetivo + Público */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Tipo de Post</label>
-              <Select value={form.tipo} onValueChange={(v) => handleField('tipo', v as PostType)}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <label className="text-xs font-medium text-muted-foreground">Objetivo</label>
+              <Select value={form.objetivo || undefined} onValueChange={(v) => handleField('objetivo', v)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir objetivo" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="feed">Feed</SelectItem>
-                  <SelectItem value="carrossel">Carrossel</SelectItem>
-                  <SelectItem value="reels">Reels</SelectItem>
-                  <SelectItem value="stories">Stories</SelectItem>
-                  <SelectItem value="video">Vídeo</SelectItem>
-                  <SelectItem value="artigo">Artigo</SelectItem>
+                  {(Object.entries(POST_OBJECTIVE_LABELS) as [PostObjective, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Público</label>
+              <Select value={form.publico || undefined} onValueChange={(v) => handleField('publico', v)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir público" /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(POST_AUDIENCE_LABELS) as [PostAudience, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row: CTA + Formato */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">CTA</label>
+              <Select value={form.cta || undefined} onValueChange={(v) => handleField('cta', v)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir CTA" /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(POST_CTA_LABELS) as [PostCTA, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Formato</label>
+              <Select value={form.formato || undefined} onValueChange={(v) => handleField('formato', v)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir formato" /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(POST_FORMAT_LABELS) as [PostFormat, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row: Plataforma + Status */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Plataforma</label>
-              <Select value={form.plataforma} onValueChange={(v) => handleField('plataforma', v as Platform)}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <Select value={form.plataforma || undefined} onValueChange={(v) => handleField('plataforma', v)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Selecionar plataforma" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="instagram">Instagram</SelectItem>
                   <SelectItem value="linkedin">LinkedIn</SelectItem>
@@ -175,10 +246,6 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Row: Status + Responsável */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Status</label>
               <Select value={form.status} onValueChange={(v) => handleField('status', v as PostStatus)}>
@@ -195,55 +262,15 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Responsável</label>
-              <Input value={form.responsavel} onChange={(e) => handleField('responsavel', e.target.value)} />
-            </div>
           </div>
 
-          {/* Row: Data + Link Canva */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* Data de Agendamento — só em agendado / postado / analise */}
+          {statusShowsDate(form.status) && (
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Data de Agendamento</label>
               <Input type="date" value={form.dataAgendamento} onChange={(e) => handleField('dataAgendamento', e.target.value)} />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Link da Arte (Canva)</label>
-              {editingCanvaLink || !form.linkCanva ? (
-                <div className="flex gap-1.5">
-                  <Input
-                    autoFocus={editingCanvaLink}
-                    placeholder="https://www.canva.com/design/..."
-                    value={form.linkCanva}
-                    onChange={(e) => handleField('linkCanva', e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && form.linkCanva.trim()) setEditingCanvaLink(false) }}
-                  />
-                  {editingCanvaLink && form.linkCanva.trim() && (
-                    <Button size="sm" variant="outline" onClick={() => setEditingCanvaLink(false)}>OK</Button>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 h-9 rounded-lg border border-input bg-transparent px-2.5">
-                  <a
-                    href={form.linkCanva}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 hover:underline transition-colors truncate flex-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLinkIcon className="size-3.5 shrink-0" />
-                    <span className="truncate">Abrir no Canva</span>
-                  </a>
-                  <button
-                    className="text-muted-foreground/60 hover:text-muted-foreground transition-colors shrink-0"
-                    onClick={() => setEditingCanvaLink(true)}
-                  >
-                    <PencilIcon className="size-3.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
 
           {/* Metadata */}
           <div className="flex gap-4 text-[11px] text-muted-foreground/60 pt-1">
@@ -263,24 +290,92 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
 }
 
 // ---------------------------------------------------------------------------
-// Post Card
+// Backlog Card — layout dedicado com campos de curadoria editorial
 // ---------------------------------------------------------------------------
 
-function PostCardContent({ post, onAprovar, onRejeitar, onDelete, isDragging }: {
+function BacklogCardContent({ post, isDragging }: { post: Post; isDragging?: boolean }) {
+  return (
+    <Card size="sm" className={`${isDragging ? 'opacity-50 ring-1 ring-ring' : 'hover:ring-1 hover:ring-ring/50'} transition-all`}>
+      <CardContent className="flex flex-col gap-2.5 pt-3">
+        {/* Título */}
+        <p className="line-clamp-2 text-sm font-medium leading-snug pr-14">
+          {post.titulo}
+        </p>
+
+        {/* Ideia do post */}
+        {post.legenda && (
+          <p className="line-clamp-3 text-xs text-muted-foreground">
+            <span className="text-amber-400/80 font-medium">Ideia: </span>
+            {post.legenda}
+          </p>
+        )}
+
+        {/* Mensagem principal */}
+        {post.mensagemPrincipal && (
+          <p className="line-clamp-2 text-xs text-muted-foreground border-l-2 border-sky-500/40 pl-2">
+            <span className="text-sky-400/80 font-medium">Mensagem: </span>
+            {post.mensagemPrincipal}
+          </p>
+        )}
+
+        {/* Badges de formato + plataforma */}
+        {(post.plataforma || post.formato) && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+            {post.plataforma && <PlatformBadge platform={post.plataforma} />}
+            {post.formato && <FormatBadge formato={post.formato} />}
+          </div>
+        )}
+
+        {/* Badges de curadoria editorial (objetivo, público, CTA) */}
+        {(post.objetivo || post.publico || post.cta) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {post.objetivo && (
+              <MetaBadge icon={TargetIcon} label={POST_OBJECTIVE_LABELS[post.objetivo]} tone="indigo" />
+            )}
+            {post.publico && (
+              <MetaBadge icon={UsersIcon} label={POST_AUDIENCE_LABELS[post.publico]} tone="cyan" />
+            )}
+            {post.cta && (
+              <MetaBadge icon={MegaphoneIcon} label={POST_CTA_LABELS[post.cta]} tone="rose" />
+            )}
+          </div>
+        )}
+
+        {/* Placeholder visual quando ainda não curado */}
+        {!post.objetivo && !post.publico && !post.cta && !post.mensagemPrincipal && !post.plataforma && !post.formato && (
+          <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-muted-foreground/60">
+            <SparklesIcon className="size-3" />
+            <span>Aguardando curadoria</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Generic Post Card (used by non-backlog columns)
+// ---------------------------------------------------------------------------
+
+function PostCardContent({ post, onAprovar, onRejeitar, isDragging }: {
   post: Post
   onAprovar?: (e: React.MouseEvent) => void
   onRejeitar?: (e: React.MouseEvent) => void
   onDelete?: (e: React.MouseEvent) => void
   isDragging?: boolean
 }) {
-  const scheduleDate = post.dataAgendamento ?? post.dataPublicacao
+  if (post.status === 'backlog') {
+    return <BacklogCardContent post={post} isDragging={isDragging} />
+  }
+
+  const scheduleDate = statusShowsDate(post.status) ? (post.dataAgendamento ?? post.dataPublicacao) : undefined
   const showActions = post.status === 'aprovacao' || post.status === 'revisao'
   return (
     <Card size="sm" className={`${isDragging ? 'opacity-50 ring-1 ring-ring' : 'hover:ring-1 hover:ring-ring/50'} transition-all`}>
       <CardHeader className="gap-2 pb-0">
         <div className="flex flex-wrap items-center gap-1.5">
-          <PlatformBadge platform={post.plataforma} />
-          <TypeBadge tipo={post.tipo} />
+          {post.plataforma && <PlatformBadge platform={post.plataforma} />}
+          {post.formato && <FormatBadge formato={post.formato} />}
           {post.tags?.includes('requer-ajuste') && (
             <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-400">
               Requer ajuste
@@ -294,7 +389,6 @@ function PostCardContent({ post, onAprovar, onRejeitar, onDelete, isDragging }: 
         </p>
         {post.legenda && (
           <p className="line-clamp-2 text-xs text-muted-foreground">
-            {post.status === 'backlog' ? <span className="text-amber-400/70 font-medium">Ideia: </span> : null}
             {post.legenda}
           </p>
         )}
@@ -302,16 +396,6 @@ function PostCardContent({ post, onAprovar, onRejeitar, onDelete, isDragging }: 
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <CalendarIcon className="size-3" />
             <span>{formatDate(scheduleDate)}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <UserIcon className="size-3" />
-          <span>{post.responsavel}</span>
-        </div>
-        {post.linkCanva && (
-          <div className="flex items-center gap-1.5 text-xs">
-            <LinkIcon className="size-3 text-muted-foreground" />
-            <span className="truncate text-blue-400">Arte no Canva</span>
           </div>
         )}
         {showActions && onAprovar && onRejeitar && (
@@ -357,7 +441,6 @@ function PostCard({ post, onUpdate, onDelete }: { post: Post; onUpdate: (post: P
         ...post,
         status: 'producao',
         tags: post.tags?.filter((t) => t !== 'requer-ajuste'),
-        responsavel: 'John',
         atualizadoEm: new Date().toISOString(),
       })
     } else if (post.status === 'revisao') {
@@ -551,22 +634,26 @@ function KanbanColumn({
 type FormState = {
   titulo: string
   legenda: string
-  tipo: PostType
-  plataforma: Platform
+  formato: PostFormat | ''
+  plataforma: Platform | ''
   status: PostStatus
-  responsavel: string
-  linkCanva: string
+  objetivo: PostObjective | ''
+  publico: PostAudience | ''
+  mensagemPrincipal: string
+  cta: PostCTA | ''
   dataAgendamento: string
 }
 
 const DEFAULT_FORM: FormState = {
   titulo: '',
   legenda: '',
-  tipo: 'feed',
-  plataforma: 'instagram',
+  formato: '',
+  plataforma: '',
   status: 'backlog',
-  responsavel: 'John',
-  linkCanva: '',
+  objetivo: '',
+  publico: '',
+  mensagemPrincipal: '',
+  cta: '',
   dataAgendamento: '',
 }
 
@@ -579,12 +666,7 @@ function NewPostDialog({
   const [form, setForm] = useState<FormState>(DEFAULT_FORM)
 
   function handleField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    const next = { ...form, [key]: value }
-    // Auto-set responsável when status changes
-    if (key === 'status') {
-      next.responsavel = getDefaultResponsavel(value as PostStatus)
-    }
-    setForm(next)
+    setForm({ ...form, [key]: value })
   }
 
   function handleSave() {
@@ -594,11 +676,13 @@ function NewPostDialog({
       id: crypto.randomUUID(),
       titulo: form.titulo.trim(),
       legenda: form.legenda.trim(),
-      tipo: form.tipo,
-      plataforma: form.plataforma,
       status: form.status,
-      responsavel: form.responsavel.trim() || getDefaultResponsavel(form.status),
-      ...(form.linkCanva.trim() ? { linkCanva: form.linkCanva.trim() } : {}),
+      ...(form.formato ? { formato: form.formato } : {}),
+      ...(form.plataforma ? { plataforma: form.plataforma } : {}),
+      ...(form.objetivo ? { objetivo: form.objetivo } : {}),
+      ...(form.publico ? { publico: form.publico } : {}),
+      ...(form.mensagemPrincipal.trim() ? { mensagemPrincipal: form.mensagemPrincipal.trim() } : {}),
+      ...(form.cta ? { cta: form.cta } : {}),
       ...(form.dataAgendamento
         ? { dataAgendamento: (() => { const [y, m, d] = form.dataAgendamento.split('-').map(Number); return new Date(y, m - 1, d, 12).toISOString() })() }
         : {}),
@@ -620,7 +704,7 @@ function NewPostDialog({
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Novo Post</DialogTitle>
         </DialogHeader>
@@ -638,57 +722,92 @@ function NewPostDialog({
             />
           </div>
 
-          {/* Legenda */}
+          {/* Ideia / Legenda */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Legenda
+              {form.status === 'backlog' ? 'Ideia do post' : 'Legenda'}
             </label>
             <textarea
-              placeholder="Legenda do post..."
+              placeholder="Descreva a ideia ou legenda..."
               value={form.legenda}
               onChange={(e) => handleField('legenda', e.target.value)}
-              rows={4}
+              rows={form.status === 'backlog' ? 3 : 4}
               className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30 resize-none"
             />
           </div>
 
-          {/* Row: Tipo + Plataforma */}
+          {/* Mensagem principal */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-muted-foreground">
+              Mensagem principal
+            </label>
+            <textarea
+              placeholder="Qual a mensagem central do post?"
+              value={form.mensagemPrincipal}
+              onChange={(e) => handleField('mensagemPrincipal', e.target.value)}
+              rows={2}
+              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30 resize-none"
+            />
+          </div>
+
+          {/* Row: Objetivo + Público */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Tipo de Post
-              </label>
-              <Select
-                value={form.tipo}
-                onValueChange={(v) => handleField('tipo', v as PostType)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
+              <label className="text-xs font-medium text-muted-foreground">Objetivo</label>
+              <Select value={form.objetivo || undefined} onValueChange={(v) => handleField('objetivo', v as PostObjective)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir objetivo" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="feed">Feed</SelectItem>
-                  <SelectItem value="carrossel">Carrossel</SelectItem>
-                  <SelectItem value="reels">Reels</SelectItem>
-                  <SelectItem value="stories">Stories</SelectItem>
-                  <SelectItem value="video">Vídeo</SelectItem>
-                  <SelectItem value="artigo">Artigo</SelectItem>
+                  {(Object.entries(POST_OBJECTIVE_LABELS) as [PostObjective, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Plataforma
-              </label>
-              <Select
-                value={form.plataforma}
-                onValueChange={(v) =>
-                  handleField('plataforma', v as Platform)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
+              <label className="text-xs font-medium text-muted-foreground">Público</label>
+              <Select value={form.publico || undefined} onValueChange={(v) => handleField('publico', v as PostAudience)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir público" /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(POST_AUDIENCE_LABELS) as [PostAudience, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row: CTA + Formato */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">CTA</label>
+              <Select value={form.cta || undefined} onValueChange={(v) => handleField('cta', v as PostCTA)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir CTA" /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(POST_CTA_LABELS) as [PostCTA, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Formato</label>
+              <Select value={form.formato || undefined} onValueChange={(v) => handleField('formato', v as PostFormat)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Definir formato" /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(POST_FORMAT_LABELS) as [PostFormat, string][]).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row: Plataforma + Status */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Plataforma</label>
+              <Select value={form.plataforma || undefined} onValueChange={(v) => handleField('plataforma', v as Platform)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Selecionar plataforma" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="instagram">Instagram</SelectItem>
                   <SelectItem value="linkedin">LinkedIn</SelectItem>
@@ -696,21 +815,10 @@ function NewPostDialog({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Row: Status + Responsável */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Status
-              </label>
-              <Select
-                value={form.status}
-                onValueChange={(v) => handleField('status', v as PostStatus)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
+              <label className="text-xs font-medium text-muted-foreground">Status</label>
+              <Select value={form.status} onValueChange={(v) => handleField('status', v as PostStatus)}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="backlog">Backlog</SelectItem>
                   <SelectItem value="aprovacao">Aprovação</SelectItem>
@@ -723,21 +831,10 @@ function NewPostDialog({
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Responsável
-              </label>
-              <Input
-                placeholder="Nome do responsável"
-                value={form.responsavel}
-                onChange={(e) => handleField('responsavel', e.target.value)}
-              />
-            </div>
           </div>
 
-          {/* Row: Data + Link Canva */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* Data de Agendamento — só em agendado / postado / analise */}
+          {statusShowsDate(form.status) && (
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">
                 Data de Agendamento
@@ -750,18 +847,7 @@ function NewPostDialog({
                 }
               />
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Link da Arte (Canva)
-              </label>
-              <Input
-                placeholder="https://www.canva.com/design/..."
-                value={form.linkCanva}
-                onChange={(e) => handleField('linkCanva', e.target.value)}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Salvar */}
           <div className="flex justify-end pt-1">
@@ -830,7 +916,6 @@ export default function InstagramPage() {
     handleUpdatePost({
       ...post,
       status: newStatus,
-      responsavel: getDefaultResponsavel(newStatus),
       atualizadoEm: new Date().toISOString(),
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps

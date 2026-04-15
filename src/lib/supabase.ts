@@ -28,12 +28,14 @@ export interface PostRow {
   id: string
   titulo: string
   legenda: string
-  tipo: string
-  plataforma: string
+  formato: string | null
+  plataforma: string | null
   status: string
-  responsavel: string
+  objetivo: string | null
+  publico: string | null
+  mensagem_principal: string | null
+  cta: string | null
   tags: string[]
-  link_canva: string | null
   data_agendamento: string | null
   data_publicacao: string | null
   criado_em: string

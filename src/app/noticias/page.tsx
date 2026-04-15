@@ -440,10 +440,7 @@ async function syncPublicarToBacklog(noticias: Noticia[]) {
     id: crypto.randomUUID(),
     titulo: noticia.title,
     legenda: noticia.link,
-    tipo: 'feed',
-    plataforma: 'instagram',
     status: 'backlog',
-    responsavel: 'John',
     criadoEm: now,
     atualizadoEm: now,
   }))
@@ -466,10 +463,7 @@ function sendNoticiaToBacklog(noticia: Noticia) {
     id: crypto.randomUUID(),
     titulo: noticia.title,
     legenda: noticia.link,
-    tipo: 'feed',
-    plataforma: 'instagram',
     status: 'backlog',
-    responsavel: 'John',
     criadoEm: now,
     atualizadoEm: now,
   }
