@@ -26,7 +26,7 @@ function formatDate(dateStr?: string): string {
   })
 }
 
-function PlatformBadge({ platform }: { platform: Post['plataforma'] }) {
+function PlatformBadge({ platform }: { platform: NonNullable<Post['plataforma']> }) {
   const color = PLATFORM_COLORS[platform]
   const label = PLATFORM_LABELS[platform]
   return (

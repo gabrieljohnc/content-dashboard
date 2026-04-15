@@ -185,7 +185,7 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Objetivo</label>
-              <Select value={form.objetivo || undefined} onValueChange={(v) => handleField('objetivo', v)}>
+              <Select value={form.objetivo || undefined} onValueChange={(v) => handleField('objetivo', v ?? '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir objetivo" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_OBJECTIVE_LABELS) as [PostObjective, string][]).map(([value, label]) => (
@@ -196,7 +196,7 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Público</label>
-              <Select value={form.publico || undefined} onValueChange={(v) => handleField('publico', v)}>
+              <Select value={form.publico || undefined} onValueChange={(v) => handleField('publico', v ?? '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir público" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_AUDIENCE_LABELS) as [PostAudience, string][]).map(([value, label]) => (
@@ -211,7 +211,7 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">CTA</label>
-              <Select value={form.cta || undefined} onValueChange={(v) => handleField('cta', v)}>
+              <Select value={form.cta || undefined} onValueChange={(v) => handleField('cta', v ?? '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir CTA" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_CTA_LABELS) as [PostCTA, string][]).map(([value, label]) => (
@@ -222,7 +222,7 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Formato</label>
-              <Select value={form.formato || undefined} onValueChange={(v) => handleField('formato', v)}>
+              <Select value={form.formato || undefined} onValueChange={(v) => handleField('formato', v ?? '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir formato" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_FORMAT_LABELS) as [PostFormat, string][]).map(([value, label]) => (
@@ -237,7 +237,7 @@ function PostDetailDialog({ post, onUpdate, open, onOpenChange }: { post: Post; 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Plataforma</label>
-              <Select value={form.plataforma || undefined} onValueChange={(v) => handleField('plataforma', v)}>
+              <Select value={form.plataforma || undefined} onValueChange={(v) => handleField('plataforma', v ?? '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Selecionar plataforma" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="instagram">Instagram</SelectItem>
@@ -754,7 +754,7 @@ function NewPostDialog({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Objetivo</label>
-              <Select value={form.objetivo || undefined} onValueChange={(v) => handleField('objetivo', v as PostObjective)}>
+              <Select value={form.objetivo || undefined} onValueChange={(v) => handleField('objetivo', (v ?? '') as PostObjective | '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir objetivo" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_OBJECTIVE_LABELS) as [PostObjective, string][]).map(([value, label]) => (
@@ -765,7 +765,7 @@ function NewPostDialog({
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Público</label>
-              <Select value={form.publico || undefined} onValueChange={(v) => handleField('publico', v as PostAudience)}>
+              <Select value={form.publico || undefined} onValueChange={(v) => handleField('publico', (v ?? '') as PostAudience | '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir público" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_AUDIENCE_LABELS) as [PostAudience, string][]).map(([value, label]) => (
@@ -780,7 +780,7 @@ function NewPostDialog({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">CTA</label>
-              <Select value={form.cta || undefined} onValueChange={(v) => handleField('cta', v as PostCTA)}>
+              <Select value={form.cta || undefined} onValueChange={(v) => handleField('cta', (v ?? '') as PostCTA | '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir CTA" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_CTA_LABELS) as [PostCTA, string][]).map(([value, label]) => (
@@ -791,7 +791,7 @@ function NewPostDialog({
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Formato</label>
-              <Select value={form.formato || undefined} onValueChange={(v) => handleField('formato', v as PostFormat)}>
+              <Select value={form.formato || undefined} onValueChange={(v) => handleField('formato', (v ?? '') as PostFormat | '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Definir formato" /></SelectTrigger>
                 <SelectContent>
                   {(Object.entries(POST_FORMAT_LABELS) as [PostFormat, string][]).map(([value, label]) => (
@@ -806,7 +806,7 @@ function NewPostDialog({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">Plataforma</label>
-              <Select value={form.plataforma || undefined} onValueChange={(v) => handleField('plataforma', v as Platform)}>
+              <Select value={form.plataforma || undefined} onValueChange={(v) => handleField('plataforma', (v ?? '') as Platform | '')}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Selecionar plataforma" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="instagram">Instagram</SelectItem>
